@@ -1,7 +1,7 @@
 <h1> ABU </h1>
 <h2>Feature :</h2>
 <ul>
-    <li>PID from round per minute to pwm.</li>
+    <li>Tune PID from round per minute to pwm.</li>
 </ul>
 <h2>👏 Introduction 👏</h2>
 <ul>
