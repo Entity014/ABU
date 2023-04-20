@@ -1,7 +1,7 @@
 <h1> ABU </h1>
 <h2>Model Ai</h2>
 <ul>
-    link : <a href="https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt">yolov8m</a>
+    <a href="https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt">yolov8m</a>
 </ul>
 <h2>Feature :</h2>
 <ul>
