@@ -4,7 +4,6 @@ from sensor_msgs.msg import Image # Image is the message type
 from std_msgs.msg import Float64
 import cv2 # OpenCV library
 from cv_bridge import CvBridge # sudo pip3 install cvbridge3 # Package to convert between ROS and OpenCV Images
-from ultralytics import YOLO
 import numpy as np
 from math import sqrt, pow
 
