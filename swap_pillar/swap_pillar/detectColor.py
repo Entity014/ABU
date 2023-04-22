@@ -25,7 +25,7 @@ class ImagePublisher(Node):
     self.publisher2_ = self.create_publisher(Float64, 'distance_xy', 10)
 
     # We will publish a message every 0.1 seconds
-    timer_period = 0.1  # seconds
+    timer_period = 0.01  # seconds
 
     # Create the timer
     self.timer = self.create_timer(timer_period, self.timer_callback)
