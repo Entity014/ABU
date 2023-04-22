@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'detect = swap_pillar.detectPil:main',
+            'detectAI = swap_pillar.detectPil:main',
             'detectManual = swap_pillar.detectColor:main'
         ],
     },
