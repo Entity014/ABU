@@ -6,7 +6,6 @@ import cv2  # OpenCV library
 # sudo pip3 install cvbridge3 # Package to convert between ROS and OpenCV Images
 from cv_bridge import CvBridge
 import numpy as np
-from math import sqrt, pow
 
 
 class ImagePublisher(Node):
@@ -25,7 +24,6 @@ class ImagePublisher(Node):
         # to the video_frames topic. The queue size is 10 messages.
         self.publisher1_ = self.create_publisher(Image, 'image', 10)
         self.publisher2_ = self.create_publisher(Float64, 'distance_xy', 10)
-        self.publisher3_ = self.create_publisher(Float64, 'distance_cam', 10)
 
         # We will publish a message every 0.1 seconds
         timer_period = 0.01  # seconds
@@ -44,16 +42,14 @@ class ImagePublisher(Node):
         self.br = CvBridge()
 
         self.deltha_dis = []
-        self.distance_Cam = []
-        self.near_dis = 0
         self.near_point = 0
+
         self.pre_num = 0
 
-        self.lower_range = np.array([19, 89, 88])
-        self.upper_range = np.array([28, 255, 255])
-
-        self.focal_length = 360
-        self.object_width = 5
+        self.lower_range = np.array([95, 89, 75])
+        self.upper_range = np.array([107, 255, 255])
+        self.width = float(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = float(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     def timer_callback(self):
         """
@@ -66,53 +62,43 @@ class ImagePublisher(Node):
         # Capture frame-by-frame
         # This method returns True/False as well
         # as the video frame.
-        width = float(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = float(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        vector_cen = np.array([width/2, height/2])
+        vector_cen = np.array([self.width/2, self.height/2])
 
         ret, frame = self.cap.read()
 
         if ret == True:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             mask = cv2.inRange(hsv, self.lower_range, self.upper_range)
-            res = cv2.bitwise_and(frame, frame, mask=mask)
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
             contours, hierarchy = cv2.findContours(
                 mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             center_coordinates = (int(vector_cen[0]), int(vector_cen[1]))
             for cnt in contours:
-                approx = cv2.approxPolyDP(
-                    cnt, 0.01*cv2.arcLength(cnt, True), True)
                 area = cv2.contourArea(cnt)
 
-                if area > 500:
+                if area > 5000:
                     x, y, w, h = cv2.boundingRect(cnt)
-                    if len(approx) > 5:
+                    if (h / w) > 0.5:
                         num += 1
-                        center_obj = (int(x + (w/2)), int(height/2))
-                        self.deltha_dis.append(
-                            sqrt(pow(vector_cen[0] - (x + (w/2)), 2)))
-
-                        object_height = h
-                        distance = (self.object_width *
-                                    self.focal_length) / object_height
-                        self.distance_Cam.append(distance)
+                        center_obj = (int(x + (w/2)), int(self.height/2))
+                        distance_point = vector_cen[0] - (x + (w/2))
+                        self.deltha_dis.append(abs(distance_point))
 
                         if num > self.pre_num:
                             self.pre_num = num
                         elif num == 1:
-                            self.temp = num
+                            self.pre_num = num
                             self.near_point = min(self.deltha_dis)
-                            self.near_dis = round(
-                                self.distance_Cam[self.deltha_dis.index(self.near_point)], 2)
                             msg1.data = self.near_point
-                            msg2.data = self.near_dis
                             self.deltha_dis.clear()
-                            self.distance_Cam.clear()
 
                         cv2.rectangle(
                             frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                         # cv2.drawContours(frame,[cnt],0,(255,255,0),-1)
-                        cv2.putText(frame, f'C{num} [ {(distance):.2f} cm ]',
+                        cv2.putText(frame, f'C{num} [ {(distance_point):.2f} cm ]',
                                     (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                         cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
                         cv2.line(frame, center_coordinates,
@@ -126,7 +112,6 @@ class ImagePublisher(Node):
 
             self.publisher1_.publish(self.br.cv2_to_imgmsg(frame, 'bgr8'))
             self.publisher2_.publish(msg1)
-            self.publisher3_.publish(msg2)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 # closing all open windows
                 cv2.destroyAllWindows()
