@@ -9,16 +9,18 @@ height = float(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 vector_cen = np.array([width/2, height/2])
 
 deltha_dis = []
-distance_Cam = []
-near_dis = 0
+# distance_Cam = []
+# near_dis = 0
 near_point = 0
 
 pre_num = 0
-lower_blue = np.array([19, 89, 88])
-upper_blue = np.array([28, 255, 255])
+lower_blue = np.array([95, 89, 75])
+upper_blue = np.array([107, 255, 255])
+# lower_blue = np.array([19, 89, 88])
+# upper_blue = np.array([28, 255, 255])
 
-focal_length = 360
-object_width = 5
+# focal_length = 360
+# object_width = 100
 
 while True:
     num = 0
@@ -28,13 +30,15 @@ while True:
     # Convert BGR to HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    # Define range of blue color in HSV
-
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
     # Bitwise-AND mask and original image
-    res = cv2.bitwise_and(frame, frame, mask=mask)
+    # res = cv2.bitwise_and(frame, frame, mask=mask)
 
     # Find contours
     contours, hierarchy = cv2.findContours(
@@ -47,40 +51,42 @@ while True:
         approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
         area = cv2.contourArea(cnt)
 
-        if area > 500:
+        if area > 5000:
             x, y, w, h = cv2.boundingRect(cnt)
-            if len(approx) > 5:
+            # if len(approx) > 4:
+            if h / w > 0.5:
                 num += 1
                 center_obj = (int(x + (w/2)), int(height/2))
-                deltha_dis.append(sqrt(pow(vector_cen[0] - (x + (w/2)), 2)))
+                # distance_point = sqrt(pow(vector_cen[0] - (x + (w/2)), 2))
+                distance_point = vector_cen[0] - (x + (w/2))
+                deltha_dis.append(distance_point)
 
-                object_height = h
-                distance = (object_width * focal_length) / object_height
-                distance_Cam.append(distance)
+                # object_height = h
+                # distance = (object_width * focal_length) / object_height
+                # distance_Cam.append(distance)
 
                 if num > pre_num:
                     pre_num = num
                 elif num == 1:
                     pre_num = num
                     near_point = min(deltha_dis)
-                    near_dis = round(
-                        distance_Cam[deltha_dis.index(near_point)], 2)
+                    # near_dis = round(
+                    #     distance_Cam[deltha_dis.index(near_point)], 2)
                     deltha_dis.clear()
-                    distance_Cam.clear()
+                    # distance_Cam.clear()
 
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv2.drawContours(frame, [cnt], 0, (255, 255, 0), -1)
-                cv2.putText(frame, f'C{num} [ {(distance):.2f} cm ]',
+                cv2.putText(frame, f'C{num} [ {(distance_point):.2f}]',
                             (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
                 cv2.line(frame, center_coordinates, center_obj, (255, 0, 0), 2)
 
-    print(near_dis)
+    print(near_point)
     cv2.circle(frame, center_coordinates, 5, (0, 0, 255), -1)
     # Display the resulting frame
     cv2.imshow('frame', frame)
-    # cv2.imshow('mask',mask)
-    # cv2.imshow('res',res)
+    cv2.imshow('mask', mask)
 
     # Quit program when 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
