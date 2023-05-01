@@ -8,16 +8,18 @@ width = float(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = float(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 vector_cen = np.array([width/2, height/2])
 
+deltha_dis_min = []
 deltha_dis = []
 # distance_Cam = []
 # near_dis = 0
 near_point = 0
+abs_near_point = 0
 
 pre_num = 0
-lower_blue = np.array([95, 89, 75])
-upper_blue = np.array([107, 255, 255])
-# lower_blue = np.array([19, 89, 88])
-# upper_blue = np.array([28, 255, 255])
+# lower_blue = np.array([95, 89, 75])
+# upper_blue = np.array([107, 255, 255])
+lower_blue = np.array([19, 89, 88])
+upper_blue = np.array([28, 255, 255])
 
 # focal_length = 360
 # object_width = 100
@@ -51,7 +53,7 @@ while True:
         approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
         area = cv2.contourArea(cnt)
 
-        if area > 5000:
+        if area > 500:
             x, y, w, h = cv2.boundingRect(cnt)
             # if len(approx) > 4:
             if h / w > 0.5:
@@ -59,6 +61,7 @@ while True:
                 center_obj = (int(x + (w/2)), int(height/2))
                 # distance_point = sqrt(pow(vector_cen[0] - (x + (w/2)), 2))
                 distance_point = vector_cen[0] - (x + (w/2))
+                deltha_dis_min.append(abs(distance_point))
                 deltha_dis.append(distance_point)
 
                 # object_height = h
@@ -69,10 +72,13 @@ while True:
                     pre_num = num
                 elif num == 1:
                     pre_num = num
-                    near_point = min(deltha_dis)
+                    abs_near_point = min(deltha_dis_min)
+                    near_point = deltha_dis[deltha_dis_min.index(
+                        abs_near_point)]
                     # near_dis = round(
                     #     distance_Cam[deltha_dis.index(near_point)], 2)
                     deltha_dis.clear()
+                    deltha_dis_min.clear()
                     # distance_Cam.clear()
 
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -82,7 +88,7 @@ while True:
                 cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
                 cv2.line(frame, center_coordinates, center_obj, (255, 0, 0), 2)
 
-    print(near_point)
+    print(near_point, abs_near_point)
     cv2.circle(frame, center_coordinates, 5, (0, 0, 255), -1)
     # Display the resulting frame
     cv2.imshow('frame', frame)
