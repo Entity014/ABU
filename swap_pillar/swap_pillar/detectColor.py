@@ -33,16 +33,18 @@ class ImagePublisher(Node):
 
         # Create a VideoCapture object
         # The argument '0' gets the default webcam.
-        # self.GSTREAMER_PIPELINE = 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=720, height=490, format=(string)NV12, framerate=30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=720, height=480, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
-        # self.cap = cv2.VideoCapture(self.GSTREAMER_PIPELINE, cv2.CAP_GSTREAMER)
+        self.GSTREAMER_PIPELINE = 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=720, height=490, format=(string)NV12, framerate=30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=720, height=480, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+        self.cap = cv2.VideoCapture(self.GSTREAMER_PIPELINE, cv2.CAP_GSTREAMER)
 
-        self.cap = cv2.VideoCapture(0)
+        # self.cap = cv2.VideoCapture(0)
 
         # Used to convert between ROS and OpenCV images
         self.br = CvBridge()
 
         self.deltha_dis = []
+        self.deltha_dis_min = []
         self.near_point = 0
+        self.abs_near_point = 0
 
         self.pre_num = 0
 
@@ -85,14 +87,18 @@ class ImagePublisher(Node):
                         num += 1
                         center_obj = (int(x + (w/2)), int(self.height/2))
                         distance_point = vector_cen[0] - (x + (w/2))
-                        self.deltha_dis.append(abs(distance_point))
+                        self.deltha_dis_min.append(abs(distance_point))
+                        self.deltha_dis.append(distance_point)
 
                         if num > self.pre_num:
                             self.pre_num = num
                         elif num == 1:
                             self.pre_num = num
-                            self.near_point = min(self.deltha_dis)
+                            self.abs_near_point = min(self.deltha_dis_min)
+                            self.near_point = self.deltha_dis[self.deltha_dis_min.index(
+                                self.abs_near_point)]
                             msg1.data = self.near_point
+                            self.deltha_dis_min.clear()
                             self.deltha_dis.clear()
 
                         cv2.rectangle(
