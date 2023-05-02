@@ -1,6 +1,7 @@
 #include <micro_ros_arduino.h>
-#include <TeensyThreads.h>
 #include <stdio.h>
+#include <LiquidCrystal_I2C.h> 
+#include <BigNumbers_I2C.h>
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -60,7 +61,13 @@ bool once = false;
 
 float prePwm = -1;
 
-static uint32_t preTime;
+
+LiquidCrystal_I2C lcd(0x27,16,2);
+BigNumbers_I2C bigNum(&lcd);
+
+
+byte x = 0;
+byte y = 0;
 
 // linear.x = ล้อซ้ายหน้า
 // linear.y = ล้อขวาหน้า
@@ -157,6 +164,7 @@ void subscription_callback(const void * msgin)
   }
   else if (msg->linear.z > 0)
   {
+    keep_pwmm = msg->linear.z;
     digitalWrite(shoot_spring, HIGH);
     if (once)
     {
@@ -217,10 +225,9 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, HIGH);
   }
+  //------------------------------------------- LCD -----------------------------------------//
+  bigNum.displayLargeInt(keep_pwmm, x, y, 4, false);
 }
-// idle
-// reload
-// shoot
 
 void setup() {
   pinMode(PWM1, OUTPUT);
@@ -248,6 +255,11 @@ void setup() {
   pinMode(pick_inb, OUTPUT);
   pinMode(pick_up_down_ina, OUTPUT);
   pinMode(pick_up_down_inb, OUTPUT);
+
+  lcd.begin();
+  lcd.backlight();
+  bigNum.begin();
+  lcd.clear();
 
   delay(1000);
 
