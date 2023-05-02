@@ -1,6 +1,6 @@
 #include <micro_ros_arduino.h>
 #include <stdio.h>
-#include <LiquidCrystal_I2C.h> 
+#include <LiquidCrystal_I2C.h>
 #include <BigNumbers_I2C.h>
 
 #include <rcl/rcl.h>
@@ -37,16 +37,15 @@ int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 #define INB4 2
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
-#define limit_s 27
-
-#define limit_s1 18 //top
-#define limit_s2 19 //under
+#define limit_s0 27
+#define limit_s1 16
+#define limit_s2 17
 #define limit_s3 -1
 
 #define pick_ina 40
 #define pick_inb 41
-#define pick_up_down_ina -1
-#define pick_up_down_inb -1
+#define pick_up_down_ina 25
+#define pick_up_down_inb 24
 String pick_state = "up";
 
 float pwmm = 0;
@@ -55,19 +54,13 @@ int state = 0;
 
 bool once = false;
 
-#define shoot_motor_under 14
-#define shoot_motor_top 15
-#define shoot_spring -1
+#define shoot_motor 14
+#define shoot_spring 15
 
 float prePwm = -1;
 
-
-LiquidCrystal_I2C lcd(0x27,16,2);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 BigNumbers_I2C bigNum(&lcd);
-
-
-byte x = 0;
-byte y = 0;
 
 // linear.x = ล้อซ้ายหน้า
 // linear.y = ล้อขวาหน้า
@@ -78,7 +71,7 @@ byte y = 0;
 // angular.z = เครื่องยก
 
 int lim_switch() {
-  return int(digitalRead(limit_s));
+  return int(digitalRead(limit_s0));
 }
 
 int lim_switch1() {
@@ -158,8 +151,7 @@ void subscription_callback(const void * msgin)
     digitalWrite(shoot_spring, LOW);
     if (once)
     {
-      analogWrite(shoot_motor_under, abs(msg->linear.z));
-      analogWrite(shoot_motor_top, abs(msg->linear.z));
+      analogWrite(shoot_motor, abs(msg->linear.z));
     }
   }
   else if (msg->linear.z > 0)
@@ -168,20 +160,21 @@ void subscription_callback(const void * msgin)
     digitalWrite(shoot_spring, HIGH);
     if (once)
     {
-      analogWrite(shoot_motor_under, abs(msg->linear.z));
-      analogWrite(shoot_motor_top, abs(msg->linear.z));
+      analogWrite(shoot_motor, abs(msg->linear.z));
     }
   }
   //------------------------------------------- reload -----------------------------------------//
   if (lim_switch1() != true)
   {
     pick_state = "up";
+    state = 1;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
   }
   else if (lim_switch2() != true)
   {
     pick_state = "down";
+    state = 2;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
   }
@@ -226,7 +219,12 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_up_down_inb, HIGH);
   }
   //------------------------------------------- LCD -----------------------------------------//
-  bigNum.displayLargeInt(keep_pwmm, x, y, 4, false);
+  bigNum.displayLargeInt(keep_pwmm, 6, 0, 3, false);
+  bigNum.displayLargeNumber(state, 0, 0);
+  lcd.setCursor(5, 0);
+  lcd.print("/");
+  lcd.setCursor(4, 1);
+  lcd.print("/");
 }
 
 void setup() {
@@ -243,12 +241,11 @@ void setup() {
   pinMode(INB3, OUTPUT);
   pinMode(INB4, OUTPUT);
 
-  pinMode(limit_s, INPUT_PULLUP);
+  pinMode(limit_s0, INPUT_PULLUP);
   pinMode(limit_s1, INPUT_PULLUP);
   pinMode(limit_s2, INPUT_PULLUP);
 
-  pinMode(shoot_motor_under, OUTPUT);
-  pinMode(shoot_motor_top, OUTPUT);
+  pinMode(shoot_motor, OUTPUT);
   pinMode(shoot_spring, OUTPUT);
 
   pinMode(pick_ina, OUTPUT);
