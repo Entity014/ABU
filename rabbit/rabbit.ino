@@ -208,7 +208,7 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
   }
-  else if (msg->angular.z == 20) //low
+  else if (msg->angular.z == 20 && lim_switch() != false) //low
   {
     digitalWrite(pick_up_down_ina, LOW);
     digitalWrite(pick_up_down_inb, HIGH);
