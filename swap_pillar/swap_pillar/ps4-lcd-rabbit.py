@@ -314,9 +314,9 @@ class Ps4(Node):
 
         for i in range(digits):
             if (numString[i] == 0) and (not leading) and (i < digits - 1):
-                self.clearNumber((i * 3) + x, y)
+                self.clearNumber((i * 4) + x, y)
             else:
-                self.displayNumber(numString[i], (i * 3) + x, y)
+                self.displayNumber(numString[i], (i * 4) + x, y)
                 leading = True
 
     def clearNumber(self, x: bytes, y: bytes):
@@ -408,7 +408,7 @@ class Ps4(Node):
             self.lcd.cursor_position(x, y + 1)
             self.lcd.message = "\x06\x01\x07"
             self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\xFE\xFE"
+            self.lcd.message = "\xFF\xFE\xFF"
             self.lcd.cursor_position(x, y + 3)
             self.lcd.message = "\x03\x04\x05"
         elif n == 9:
