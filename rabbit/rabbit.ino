@@ -22,19 +22,19 @@ rcl_init_options_t init_options;
 
 
 #define PWM1 1
-#define PWM2 5
-#define PWM3 22
+#define PWM2 22
+#define PWM3 5
 #define PWM4 4
 
 #define INA1 20
-#define INA2 6
-#define INA3 23
+#define INA2 23
+#define INA3 6
 #define INA4 3
 int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 
 #define INB1 21
-#define INB2 8
-#define INB3 0
+#define INB2 0
+#define INB3 8
 #define INB4 2
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
