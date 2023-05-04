@@ -316,7 +316,7 @@ class Ps4(Node):
             self.lcd.message = "  \x02"
         elif n == 5:
             self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x06\x02"
+            self.lcd.message = "\x00\x06\x05"
             self.lcd.cursor_position(x, y + 1)
             self.lcd.message = "\x07\x04\x02"
         elif n == 6:
