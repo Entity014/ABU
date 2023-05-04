@@ -129,7 +129,7 @@ def displayNumber(n: bytes, x: bytes, y: bytes):
         lcd.message = "  \x02"
     elif n == 5:
         lcd.cursor_position(x, y)
-        lcd.message = "\x00\x06\x02"
+        lcd.message = "\x00\x06\x05"
         lcd.cursor_position(x, y + 1)
         lcd.message = "\x07\x04\x02"
     elif n == 6:
