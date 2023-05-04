@@ -55,8 +55,8 @@ int state = 0;
 
 bool once = false;
 
-#define shoot_motor 14
-#define shoot_spring 15
+#define shoot_motor 29
+#define shoot_spring 19
 
 float prePwm = -1;
 
@@ -151,7 +151,6 @@ void subscription_callback(const void * msgin)
   if (pwmm > 0)
   {
     keep_pwmm = pwmm;
-    digitalWrite(shoot_spring, HIGH);
     if (once)
     {
       analogWrite(shoot_motor, abs(pwmm));
@@ -160,14 +159,21 @@ void subscription_callback(const void * msgin)
   }
   else
   {
-    digitalWrite(shoot_spring, LOW);
     if (once)
     {
       analogWrite(shoot_motor, abs(pwmm));
       once = false;
     }
   }
-
+  //------------------------------------------- spring -----------------------------------------//
+  if (msg->angular.z == 999)
+  {
+    digitalWrite(shoot_spring, HIGH);
+  }
+  else
+  {
+    digitalWrite(shoot_spring, LOW);
+  }
   //------------------------------------------- reload -----------------------------------------//
   if (lim_switch1() == false)
   {
@@ -187,16 +193,16 @@ void subscription_callback(const void * msgin)
   {
     if (pick_state == "up")
     {
-      digitalWrite(pick_ina, LOW);
-      digitalWrite(pick_inb, HIGH);
-    }
-    else
-    {
       digitalWrite(pick_ina, HIGH);
       digitalWrite(pick_inb, LOW);
     }
+    else
+    {
+      digitalWrite(pick_ina, LOW);
+      digitalWrite(pick_inb, HIGH);
+    }
   }
-  //------------------------------------------- up & down -----------------------------------------//
+  //------------------------------------------- up & down [ feed ] -----------------------------------------//
   if (msg->angular.z == 10) //up
   {
     digitalWrite(pick_up_down_ina, HIGH);
