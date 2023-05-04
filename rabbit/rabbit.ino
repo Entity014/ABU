@@ -26,13 +26,13 @@ rcl_init_options_t init_options;
 #define PWM3 22
 #define PWM4 4
 
-#define INA1 18
+#define INA1 20
 #define INA2 6
 #define INA3 23
 #define INA4 3
 int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 
-#define INB1 19
+#define INB1 21
 #define INB2 8
 #define INB3 0
 #define INB4 2
@@ -57,7 +57,6 @@ bool once = false;
 
 #define shoot_motor 14
 #define shoot_spring 15
-#define LED 13
 
 float prePwm = -1;
 
@@ -156,10 +155,8 @@ void subscription_callback(const void * msgin)
     if (once)
     {
       analogWrite(shoot_motor, abs(pwmm));
-      digitalWrite(LED, HIGH);
       once = false;
     }
-    digitalWrite(LED, LOW);
   }
   else
   {
@@ -190,25 +187,25 @@ void subscription_callback(const void * msgin)
   {
     if (pick_state == "up")
     {
-      digitalWrite(pick_ina, HIGH);
-      digitalWrite(pick_inb, LOW);
+      digitalWrite(pick_ina, LOW);
+      digitalWrite(pick_inb, HIGH);
     }
     else
     {
-      digitalWrite(pick_ina, LOW);
-      digitalWrite(pick_inb, HIGH);
+      digitalWrite(pick_ina, HIGH);
+      digitalWrite(pick_inb, LOW);
     }
   }
   //------------------------------------------- up & down -----------------------------------------//
   if (msg->angular.z == 10) //up
   {
-    digitalWrite(pick_up_down_ina, LOW);
-    digitalWrite(pick_up_down_inb, HIGH);
+    digitalWrite(pick_up_down_ina, HIGH);
+    digitalWrite(pick_up_down_inb, LOW);
   }
   else if (msg->angular.z == 20 && lim_switch() == true) //low
   {
-    digitalWrite(pick_up_down_ina, HIGH);
-    digitalWrite(pick_up_down_inb, LOW);
+    digitalWrite(pick_up_down_ina, LOW);
+    digitalWrite(pick_up_down_inb, HIGH);
   }
   else
   {
@@ -249,8 +246,6 @@ void setup() {
   pinMode(pick_inb, OUTPUT);
   pinMode(pick_up_down_ina, OUTPUT);
   pinMode(pick_up_down_inb, OUTPUT);
-
-  pinMode(LED, OUTPUT);
 
 //  lcd.begin();
 //  lcd.backlight();
