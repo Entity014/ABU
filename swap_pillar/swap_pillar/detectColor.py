@@ -3,6 +3,7 @@ from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import Image  # Image is the message type
 from std_msgs.msg import Float64
 import cv2  # OpenCV library
+
 # sudo pip3 install cvbridge3 # Package to convert between ROS and OpenCV Images
 from cv_bridge import CvBridge
 import numpy as np
@@ -18,12 +19,12 @@ class ImagePublisher(Node):
         Class constructor to set up the node
         """
         # Initiate the Node class's constructor and give it a name
-        super().__init__('Camera')
+        super().__init__("Camera")
 
         # Create the publisher. This publisher will publish an Image
         # to the video_frames topic. The queue size is 10 messages.
-        self.publisher1_ = self.create_publisher(Image, 'image', 10)
-        self.publisher2_ = self.create_publisher(Float64, 'distance_xy', 10)
+        self.publisher1_ = self.create_publisher(Image, "image", 10)
+        self.publisher2_ = self.create_publisher(Float64, "distance_xy", 10)
 
         # We will publish a message every 0.1 seconds
         timer_period = 0.01  # seconds
@@ -33,7 +34,7 @@ class ImagePublisher(Node):
 
         # Create a VideoCapture object
         # The argument '0' gets the default webcam.
-        self.GSTREAMER_PIPELINE = 'nvarguscamerasrc ! video/x-raw(memory:NVMM), width=720, height=490, format=(string)NV12, framerate=30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=720, height=480, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink'
+        self.GSTREAMER_PIPELINE = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=720, height=490, format=(string)NV12, framerate=30/1 ! nvvidconv flip-method=0 ! video/x-raw, width=720, height=480, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink"
         self.cap = cv2.VideoCapture(self.GSTREAMER_PIPELINE, cv2.CAP_GSTREAMER)
 
         # self.cap = cv2.VideoCapture(0)
@@ -48,8 +49,8 @@ class ImagePublisher(Node):
 
         self.pre_num = 0
 
-        self.lower_range = np.array([95, 89, 75])
-        self.upper_range = np.array([107, 255, 255])
+        self.lower_range = np.array([19, 89, 88])
+        self.upper_range = np.array([28, 255, 255])
         self.width = float(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = float(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
@@ -64,7 +65,7 @@ class ImagePublisher(Node):
         # Capture frame-by-frame
         # This method returns True/False as well
         # as the video frame.
-        vector_cen = np.array([self.width/2, self.height/2])
+        vector_cen = np.array([self.width / 2, self.height / 2])
 
         ret, frame = self.cap.read()
         frame = cv2.flip(frame, 0)
@@ -77,7 +78,8 @@ class ImagePublisher(Node):
             mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
 
             contours, hierarchy = cv2.findContours(
-                mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
+            )
             center_coordinates = (int(vector_cen[0]), int(vector_cen[1]))
             for cnt in contours:
                 area = cv2.contourArea(cnt)
@@ -86,8 +88,8 @@ class ImagePublisher(Node):
                     x, y, w, h = cv2.boundingRect(cnt)
                     if (h / w) > 0.5:
                         num += 1
-                        center_obj = (int(x + (w/2)), int(self.height/2))
-                        distance_point = vector_cen[0] - (x + (w/2))
+                        center_obj = (int(x + (w / 2)), int(self.height / 2))
+                        distance_point = vector_cen[0] - (x + (w / 2))
                         self.deltha_dis_min.append(abs(distance_point))
                         self.deltha_dis.append(distance_point)
 
@@ -96,20 +98,26 @@ class ImagePublisher(Node):
                         elif num == 1:
                             self.pre_num = num
                             self.abs_near_point = min(self.deltha_dis_min)
-                            self.near_point = self.deltha_dis[self.deltha_dis_min.index(
-                                self.abs_near_point)]
+                            self.near_point = self.deltha_dis[
+                                self.deltha_dis_min.index(self.abs_near_point)
+                            ]
                             msg1.data = self.near_point
                             self.deltha_dis_min.clear()
                             self.deltha_dis.clear()
 
-                        cv2.rectangle(
-                            frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                         # cv2.drawContours(frame,[cnt],0,(255,255,0),-1)
-                        cv2.putText(frame, f'C{num} [ {(distance_point):.2f} cm ]',
-                                    (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                        cv2.putText(
+                            frame,
+                            f"C{num} [ {(distance_point):.2f} cm ]",
+                            (x, y),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            1,
+                            (255, 0, 0),
+                            2,
+                        )
                         cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
-                        cv2.line(frame, center_coordinates,
-                                 center_obj, (255, 0, 0), 2)
+                        cv2.line(frame, center_coordinates, center_obj, (255, 0, 0), 2)
 
             cv2.circle(frame, center_coordinates, 5, (0, 0, 255), -1)
             # cv2.imshow("ROS2 publisher webcam",frame)
@@ -117,15 +125,15 @@ class ImagePublisher(Node):
             # The 'cv2_to_imgmsg' method converts an OpenCV
             # image to a ROS 2 image message
 
-            self.publisher1_.publish(self.br.cv2_to_imgmsg(frame, 'bgr8'))
+            self.publisher1_.publish(self.br.cv2_to_imgmsg(frame, "bgr8"))
             self.publisher2_.publish(msg1)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord("q"):
                 # closing all open windows
                 cv2.destroyAllWindows()
                 exit()
 
         # Display the message on the console
-        self.get_logger().info('Publishing video frame')
+        self.get_logger().info("Publishing video frame")
 
 
 def main(args=None):
@@ -147,5 +155,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
