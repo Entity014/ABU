@@ -67,6 +67,7 @@ class ImagePublisher(Node):
         vector_cen = np.array([self.width/2, self.height/2])
 
         ret, frame = self.cap.read()
+        frame = cv2.flip(frame, 0)
 
         if ret == True:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
