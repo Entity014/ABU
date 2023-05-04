@@ -72,8 +72,8 @@ class Ps4(Node):
         self.stateDriveMode = 0
 
         # TODO: LCD
-        lcd_columns = 16
-        lcd_rows = 2
+        lcd_columns = 20
+        lcd_rows = 4
         lcd_rs = digitalio.DigitalInOut(board.D26)
         lcd_en = digitalio.DigitalInOut(board.D19)
         lcd_d4 = digitalio.DigitalInOut(board.D13)
