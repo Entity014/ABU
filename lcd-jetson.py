@@ -3,7 +3,6 @@ import busio
 import digitalio
 import adafruit_character_lcd.character_lcd as characterlcd
 import adafruit_character_lcd.character_lcd_i2c as character_lcd_i2c
-import time
 
 # Define GPIO pins for the LCD
 lcd_rs = digitalio.DigitalInOut(board.D26)
