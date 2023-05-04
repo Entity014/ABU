@@ -23,28 +23,28 @@ rcl_init_options_t init_options;
 
 #define PWM1 1
 #define PWM2 5
-#define PWM3 0
+#define PWM3 22
 #define PWM4 4
 
-#define INA1 20
+#define INA1 18
 #define INA2 6
-#define INA3 22
+#define INA3 23
 #define INA4 3
 int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 
-#define INB1 21
+#define INB1 19
 #define INB2 8
-#define INB3 23
+#define INB3 0
 #define INB4 2
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
-#define limit_s0 -1
-#define limit_s1 27
-#define limit_s2 16
+#define limit_s0 27
+#define limit_s1 16
+#define limit_s2 17
 //#define limit_s3 -1
 
 #define pick_ina 40
-#define pick_inWb 41
+#define pick_inb 41
 #define pick_up_down_ina 25
 #define pick_up_down_inb 24
 String pick_state = "up";
@@ -53,10 +53,11 @@ float pwmm = 0;
 float keep_pwmm = 0;
 int state = 0;
 
-bool once = true;
+bool once = false;
 
 #define shoot_motor 14
-#define shoot_spring 17
+#define shoot_spring 15
+#define LED 13
 
 float prePwm = -1;
 
@@ -143,15 +144,31 @@ void subscription_callback(const void * msgin)
 
   //------------------------------------------- shoot -----------------------------------------//
   pwmm = msg->linear.z;
+  if (prePwm != pwmm)
+  {
+    prePwm = pwmm;
+    once = true;
+  }
   if (pwmm > 0)
   {
     keep_pwmm = pwmm;
     digitalWrite(shoot_spring, HIGH);
+    if (once)
+    {
+      analogWrite(shoot_motor, abs(pwmm));
+      digitalWrite(LED, HIGH);
+      once = false;
+    }
+    digitalWrite(LED, LOW);
   }
   else
   {
     digitalWrite(shoot_spring, LOW);
-    digitalWrite(shoot_motor,LOW);
+    if (once)
+    {
+      analogWrite(shoot_motor, abs(pwmm));
+      once = false;
+    }
   }
 
   //------------------------------------------- reload -----------------------------------------//
@@ -169,15 +186,6 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
   }
-//  else
-//  {
-//    if (pick_state != "reload")
-//    {
-//      pick_state = "up";
-//      digitalWrite(pick_ina, LOW);
-//      digitalWrite(pick_inb, HIGH);
-//    }
-//  }
   if (msg->angular.z == 1)
   {
     if (pick_state == "up")
@@ -197,7 +205,7 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_up_down_ina, LOW);
     digitalWrite(pick_up_down_inb, HIGH);
   }
-  else if (msg->angular.z == 20) //low
+  else if (msg->angular.z == 20 && lim_switch() == true) //low
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
@@ -241,6 +249,8 @@ void setup() {
   pinMode(pick_inb, OUTPUT);
   pinMode(pick_up_down_ina, OUTPUT);
   pinMode(pick_up_down_inb, OUTPUT);
+
+  pinMode(LED, OUTPUT);
 
 //  lcd.begin();
 //  lcd.backlight();
