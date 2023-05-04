@@ -66,6 +66,11 @@ class Ps4(Node):
         self.axes["AX"] = 0
         self.axes["AY"] = 0
 
+        self.preShoot = -1
+        self.stateShoot = 0
+        self.preDriveMode = -1
+        self.stateDriveMode = 0
+
         # TODO: LCD
         lcd_columns = 16
         lcd_rows = 2
@@ -151,6 +156,11 @@ class Ps4(Node):
         x = 0.0
         y = 0.0
 
+        if self.preDriveMode != self.button["L"]:
+            self.preDriveMode = self.button["L"]
+            if self.button["L"] == 1:
+                self.stateDriveMode += 1
+
         if self.state_auto == 0:
             if (self.axes["AX"] > 0) or (self.axes["AY"] > 0):
                 y = -1 * (self.axes["AX"])
@@ -161,7 +171,7 @@ class Ps4(Node):
             else:
                 y = -1 * (self.axes["LX"])
                 x = -1 * self.axes["LY"]
-                if self.button["L1"] == 0:
+                if self.stateDriveMode == 1:
                     if (x > limit) and (y > limit):
                         x = 0.707
                         y = 0.707
@@ -177,6 +187,8 @@ class Ps4(Node):
                     else:
                         x = 0.0
                         y = 0.0
+                elif self.stateDriveMode == 2:
+                    self.stateDriveMode = 0
 
         if (
             (self.button["PS"] == 1)
@@ -224,15 +236,15 @@ class Ps4(Node):
         msg.angular.y = float(round(rightBack * 255))
 
         # //------------------------------------------------------------------------------------------------//
-        if (self.button["S"] == 1) and (self.button["O"] == 1):
+        if (self.button["L2"] == 1) and (self.button["R2"] == 1):
             self.assis_shoot = 0
-        elif self.button["S"] == 1:
+        elif self.button["L2"] == 1:
             self.assis_shoot += 0.5
-        elif self.button["O"] == 1:
+        elif self.button["R2"] == 1:
             self.assis_shoot -= 0.5
 
         # //------------------------------------------------------------------------------------------------//
-        if (self.button["R1"] == 1) and (self.counter == 0):
+        if (self.button["R"] == 1) and (self.counter == 0):
             self.state += 1
             self.counter = 4
         if self.counter > 0:
@@ -251,20 +263,32 @@ class Ps4(Node):
         elif self.pwm < 0:
             self.pwm = 0.0
 
-        if self.button["X"] == 1:
+        # if self.button["X"] == 1:
+        #     msg.linear.z = self.pwm
+
+        if self.preShoot != self.button["X"]:
+            self.preShoot = self.button["X"]
+            if self.button["X"] == 1:
+                self.stateShoot += 1
+
+        if self.stateShoot == 0:
+            msg.linear.z = 0.0
+        elif self.stateShoot == 1:
             msg.linear.z = self.pwm
+        elif self.stateShoot == 2:
+            self.stateShoot = 0
         # //------------------------------------------------------------------------------------------------//
 
         if self.button["T"] == 1:
             msg.angular.z = 1.0
-        elif self.button["L"] == 1:
+        elif self.button["L1"] == 1:
             msg.angular.z = 10.0
-        elif self.button["R"] == 1:
+        elif self.button["S"] == 1:
             msg.angular.z = 20.0
 
-        if self.button["L2"] == 1:
+        if self.button["R1"] == 1:
             msg.angular.z = 999.0
-        elif self.button["R2"] == 1:
+        elif self.button["O"] == 1:
             msg.angular.z = 888.0
 
         self.sent_drive.publish(msg)
