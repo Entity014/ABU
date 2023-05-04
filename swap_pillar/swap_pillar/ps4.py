@@ -256,6 +256,8 @@ class Ps4(Node):
 
         if self.button["L2"] == 1:
             msg.angular.z = 999.0
+        elif self.button["R2"] == 1:
+            msg.angular.z = 888.0
 
         self.sent_drive.publish(msg)
         self.displayInt(self.pwm, 6, 0, 3, False)
