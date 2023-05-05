@@ -89,9 +89,9 @@ def displayInt(n: int, x: bytes, y: bytes, digits: bytes, leading: bool):
 
     for i in range(digits):
         if (numString[i] == 0) and (not leading) and (i < digits - 1):
-            clearNumber((i * 3) + x, y)
+            clearNumber((i * 4) + x, y)
         else:
-            displayNumber(numString[i], (i * 3) + x, y)
+            displayNumber(numString[i], (i * 4) + x, y)
             leading = True
 
 
@@ -185,7 +185,7 @@ def displayNumber(n: bytes, x: bytes, y: bytes):
         lcd.cursor_position(x, y + 1)
         lcd.message = "\x06\x01\x07"
         lcd.cursor_position(x, y + 2)
-        lcd.message = "\xFF\xFE\xFE"
+        lcd.message = "\xFF\xFE\xFF"
         lcd.cursor_position(x, y + 3)
         lcd.message = "\x03\x04\x05"
     elif n == 9:
