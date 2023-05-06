@@ -213,7 +213,6 @@ class Ps4(Node):
                 x = 0.0
                 y = 0.0
 
-        x *= -1
         turn = self.axes["RX"]
         theta = math.atan2(y, x)
         power = math.hypot(x, y)
