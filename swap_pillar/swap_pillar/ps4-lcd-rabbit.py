@@ -311,7 +311,7 @@ class Ps4(Node):
             msg.angular.z = 888.0
 
         self.sent_drive.publish(msg)
-        self.displayInt(self.pwm, 6, 0, 3, False)
+        # self.displayInt(self.pwm, 6, 0, 3, False)
 
     # TODO: LCD Functions
     # def displayInt(self, n: int, x: bytes, y: bytes, digits: bytes, leading: bool):
