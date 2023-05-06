@@ -5,9 +5,10 @@ from std_msgs.msg import String
 from std_msgs.msg import Float64
 from geometry_msgs.msg import Twist
 from rclpy import qos
-import board
-import digitalio
-import adafruit_character_lcd.character_lcd as characterlcd
+
+# import board
+# import digitalio
+# import adafruit_character_lcd.character_lcd as characterlcd
 import math
 
 
@@ -72,18 +73,18 @@ class Ps4(Node):
         self.stateDriveMode = 0
 
         # TODO: LCD
-        lcd_columns = 20
-        lcd_rows = 4
-        lcd_rs = digitalio.DigitalInOut(board.D26)
-        lcd_en = digitalio.DigitalInOut(board.D19)
-        lcd_d4 = digitalio.DigitalInOut(board.D13)
-        lcd_d5 = digitalio.DigitalInOut(board.D6)
-        lcd_d6 = digitalio.DigitalInOut(board.D5)
-        lcd_d7 = digitalio.DigitalInOut(board.D9)
+        # lcd_columns = 20
+        # lcd_rows = 4
+        # lcd_rs = digitalio.DigitalInOut(board.D26)
+        # lcd_en = digitalio.DigitalInOut(board.D19)
+        # lcd_d4 = digitalio.DigitalInOut(board.D13)
+        # lcd_d5 = digitalio.DigitalInOut(board.D6)
+        # lcd_d6 = digitalio.DigitalInOut(board.D5)
+        # lcd_d7 = digitalio.DigitalInOut(board.D9)
 
-        self.lcd = characterlcd.Character_LCD_Mono(
-            lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows
-        )
+        # self.lcd = characterlcd.Character_LCD_Mono(
+        #     lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows
+        # )
 
         botRightTri = bytes(
             [0b00000, 0b00000, 0b00000, 0b00000, 0b00001, 0b00111, 0b01111, 0b11111]
@@ -133,8 +134,25 @@ class Ps4(Node):
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
-        for index, element in enumerate(self.all):
-            self.button[element] = msg_in.buttons[index]
+        self.button["X"] = msg_in[0]
+        self.button["O"] = msg_in[1]
+        self.button["T"] = msg_in[4]
+        self.button["S"] = msg_in[3]
+        self.button["L1"] = msg_in[6]
+        self.button["R1"] = msg_in[7]
+        if msg_in.axes[5] > 0:
+            self.button["L2"] = 1
+        else:
+            self.button["L2"] = 0
+        if msg_in.axes[4] > 0:
+            self.button["R2"] = 1
+        else:
+            self.button["R2"] = 0
+        self.button["L"] = msg_in[10]
+        self.button["R"] = msg_in[11]
+        self.button["PS"] = msg_in[-1]
+        # for index, element in enumerate(self.all):
+        #     self.button[element] = msg_in.buttons[index]
         # 			print(f"{self.all[index]}  :  {self.button[element]}")
 
         for index, element in enumerate(self.all2):
@@ -295,131 +313,131 @@ class Ps4(Node):
         self.displayInt(self.pwm, 6, 0, 3, False)
 
     # TODO: LCD Functions
-    def displayInt(self, n: int, x: bytes, y: bytes, digits: bytes, leading: bool):
-        if n < 0:
-            n = abs(n)
+    # def displayInt(self, n: int, x: bytes, y: bytes, digits: bytes, leading: bool):
+    #     if n < 0:
+    #         n = abs(n)
 
-        numString = []
+    #     numString = []
 
-        for i in range(digits):
-            numString.append(-1)
-        ind = digits - 1
+    #     for i in range(digits):
+    #         numString.append(-1)
+    #     ind = digits - 1
 
-        while ind:
-            numString[ind] = int(n % 10)
-            n /= 10
-            ind -= 1
+    #     while ind:
+    #         numString[ind] = int(n % 10)
+    #         n /= 10
+    #         ind -= 1
 
-        numString[0] = int(n % 10)
+    #     numString[0] = int(n % 10)
 
-        for i in range(digits):
-            if (numString[i] == 0) and (not leading) and (i < digits - 1):
-                self.clearNumber((i * 4) + x, y)
-            else:
-                self.displayNumber(numString[i], (i * 4) + x, y)
-                leading = True
+    #     for i in range(digits):
+    #         if (numString[i] == 0) and (not leading) and (i < digits - 1):
+    #             self.clearNumber((i * 4) + x, y)
+    #         else:
+    #             self.displayNumber(numString[i], (i * 4) + x, y)
+    #             leading = True
 
-    def clearNumber(self, x: bytes, y: bytes):
-        self.lcd.cursor_position(x, y)
-        self.lcd.message = "   "
-        self.lcd.cursor_position(x, y + 1)
-        self.lcd.message = "   "
-        self.lcd.cursor_position(x, y + 2)
-        self.lcd.message = "   "
-        self.lcd.cursor_position(x, y + 3)
-        self.lcd.message = "   "
+    # def clearNumber(self, x: bytes, y: bytes):
+    #     self.lcd.cursor_position(x, y)
+    #     self.lcd.message = "   "
+    #     self.lcd.cursor_position(x, y + 1)
+    #     self.lcd.message = "   "
+    #     self.lcd.cursor_position(x, y + 2)
+    #     self.lcd.message = "   "
+    #     self.lcd.cursor_position(x, y + 3)
+    #     self.lcd.message = "   "
 
-    def displayNumber(self, n: bytes, x: bytes, y: bytes):
-        if n == 0:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\xFF\x00\xFF"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\x05\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
-        elif n == 1:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\xFE"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x05\xFF\xFE"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFE\xFF\xFE"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\xFE\x04\xFE"
-        elif n == 2:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x04\x00\x07"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\x05\xFE"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x04\x04\x04"
-        elif n == 3:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x04\x00\x07"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\x01\x03\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
-        elif n == 4:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\xFE\x01"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\xFF\xFE\xFF"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\x04\x04\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\xFE\xFE\x04"
-        elif n == 5:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x01\x01\x01"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x06\x01\x02"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\x01\xFE\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
-        elif n == 6:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\xFF\x01\x02"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\xFE\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
-        elif n == 7:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x01\x01\x01"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\xFE\x00\x07"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\x05\xFE"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x04\xFE\xFE"
-        elif n == 8:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x06\x01\x07"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFF\xFE\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
-        elif n == 9:
-            self.lcd.cursor_position(x, y)
-            self.lcd.message = "\x00\x01\x02"
-            self.lcd.cursor_position(x, y + 1)
-            self.lcd.message = "\x06\x01\xFF"
-            self.lcd.cursor_position(x, y + 2)
-            self.lcd.message = "\xFE\xFE\xFF"
-            self.lcd.cursor_position(x, y + 3)
-            self.lcd.message = "\x03\x04\x05"
+    # def displayNumber(self, n: bytes, x: bytes, y: bytes):
+    #     if n == 0:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\xFF\x00\xFF"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFF\x05\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
+    #     elif n == 1:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\xFE"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x05\xFF\xFE"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFE\xFF\xFE"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\xFE\x04\xFE"
+    #     elif n == 2:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x04\x00\x07"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFF\x05\xFE"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x04\x04\x04"
+    #     elif n == 3:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x04\x00\x07"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\x01\x03\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
+    #     elif n == 4:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\xFE\x01"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\xFF\xFE\xFF"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\x04\x04\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\xFE\xFE\x04"
+    #     elif n == 5:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x01\x01\x01"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x06\x01\x02"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\x01\xFE\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
+    #     elif n == 6:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\xFF\x01\x02"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFF\xFE\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
+    #     elif n == 7:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x01\x01\x01"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\xFE\x00\x07"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFF\x05\xFE"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x04\xFE\xFE"
+    #     elif n == 8:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x06\x01\x07"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFF\xFE\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
+    #     elif n == 9:
+    #         self.lcd.cursor_position(x, y)
+    #         self.lcd.message = "\x00\x01\x02"
+    #         self.lcd.cursor_position(x, y + 1)
+    #         self.lcd.message = "\x06\x01\xFF"
+    #         self.lcd.cursor_position(x, y + 2)
+    #         self.lcd.message = "\xFE\xFE\xFF"
+    #         self.lcd.cursor_position(x, y + 3)
+    #         self.lcd.message = "\x03\x04\x05"
 
 
 def main():
