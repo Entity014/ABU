@@ -86,51 +86,51 @@ class Ps4(Node):
         #     lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows
         # )
 
-        botRightTri = bytes(
-            [0b00000, 0b00000, 0b00000, 0b00000, 0b00001, 0b00111, 0b01111, 0b11111]
-        )
+        # botRightTri = bytes(
+        #     [0b00000, 0b00000, 0b00000, 0b00000, 0b00001, 0b00111, 0b01111, 0b11111]
+        # )
 
-        botBlock = bytes(
-            [0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b11111, 0b11111, 0b11111]
-        )
+        # botBlock = bytes(
+        #     [0b00000, 0b00000, 0b00000, 0b00000, 0b11111, 0b11111, 0b11111, 0b11111]
+        # )
 
-        botLeftTri = bytes(
-            [0b00000, 0b00000, 0b00000, 0b00000, 0b10000, 0b11100, 0b11110, 0b11111]
-        )
+        # botLeftTri = bytes(
+        #     [0b00000, 0b00000, 0b00000, 0b00000, 0b10000, 0b11100, 0b11110, 0b11111]
+        # )
 
-        topRightTri = bytes(
-            [0b11111, 0b01111, 0b00111, 0b00001, 0b00000, 0b00000, 0b00000, 0b00000]
-        )
+        # topRightTri = bytes(
+        #     [0b11111, 0b01111, 0b00111, 0b00001, 0b00000, 0b00000, 0b00000, 0b00000]
+        # )
 
-        topBlock = bytes(
-            [0b11111, 0b11111, 0b11111, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000]
-        )
+        # topBlock = bytes(
+        #     [0b11111, 0b11111, 0b11111, 0b11111, 0b00000, 0b00000, 0b00000, 0b00000]
+        # )
 
-        topLeftTri = bytes(
-            [0b11111, 0b11110, 0b11100, 0b10000, 0b00000, 0b00000, 0b00000, 0b00000]
-        )
+        # topLeftTri = bytes(
+        #     [0b11111, 0b11110, 0b11100, 0b10000, 0b00000, 0b00000, 0b00000, 0b00000]
+        # )
 
-        fullTopRightTri = bytes(
-            [0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b01111, 0b00111, 0b00001]
-        )
+        # fullTopRightTri = bytes(
+        #     [0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b01111, 0b00111, 0b00001]
+        # )
 
-        fullTopLeftTri = bytes(
-            [0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11110, 0b11100, 0b10000]
-        )
+        # fullTopLeftTri = bytes(
+        #     [0b11111, 0b11111, 0b11111, 0b11111, 0b11111, 0b11110, 0b11100, 0b10000]
+        # )
 
-        obj_num = [
-            botRightTri,
-            botBlock,
-            botLeftTri,
-            topRightTri,
-            topBlock,
-            topLeftTri,
-            fullTopRightTri,
-            fullTopLeftTri,
-        ]
+        # obj_num = [
+        #     botRightTri,
+        #     botBlock,
+        #     botLeftTri,
+        #     topRightTri,
+        #     topBlock,
+        #     topLeftTri,
+        #     fullTopRightTri,
+        #     fullTopLeftTri,
+        # ]
 
-        for i in range(len(obj_num)):
-            self.lcd.create_char(i, obj_num[i])
+        # for i in range(len(obj_num)):
+        #     self.lcd.create_char(i, obj_num[i])
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
