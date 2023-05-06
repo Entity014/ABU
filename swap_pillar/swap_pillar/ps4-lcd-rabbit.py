@@ -135,12 +135,12 @@ class Ps4(Node):
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
-        self.button["X"] = msg_in[0]
-        self.button["O"] = msg_in[1]
-        self.button["T"] = msg_in[4]
-        self.button["S"] = msg_in[3]
-        self.button["L1"] = msg_in[6]
-        self.button["R1"] = msg_in[7]
+        self.button["X"] = msg_in.buttons[0]
+        self.button["O"] = msg_in.buttons[1]
+        self.button["T"] = msg_in.buttons[4]
+        self.button["S"] = msg_in.buttons[3]
+        self.button["L1"] = msg_in.buttons[6]
+        self.button["R1"] = msg_in.buttons[7]
         if msg_in.axes[5] > 0:
             self.button["L2"] = 1
         else:
@@ -149,9 +149,9 @@ class Ps4(Node):
             self.button["R2"] = 1
         else:
             self.button["R2"] = 0
-        self.button["L"] = msg_in[10]
-        self.button["R"] = msg_in[11]
-        self.button["PS"] = msg_in[-1]
+        self.button["L"] = msg_in.buttons[10]
+        self.button["R"] = msg_in.buttons[11]
+        self.button["PS"] = msg_in.buttons[-1]
         # for index, element in enumerate(self.all):
         #     self.button[element] = msg_in.buttons[index]
         # 			print(f"{self.all[index]}  :  {self.button[element]}")
