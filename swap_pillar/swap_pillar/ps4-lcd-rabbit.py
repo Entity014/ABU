@@ -85,6 +85,7 @@ class Ps4(Node):
         # self.lcd = characterlcd.Character_LCD_Mono(
         #     lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows
         # )
+        #
 
         # botRightTri = bytes(
         #     [0b00000, 0b00000, 0b00000, 0b00000, 0b00001, 0b00111, 0b01111, 0b11111]
