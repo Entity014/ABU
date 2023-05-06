@@ -300,16 +300,21 @@ class Ps4(Node):
 
         if self.button["T"] == 1:
             msg.angular.z = 1.0
+        elif self.button["L1"] == 1 and self.button["R1"] == 1:
+            msg.angular.z = 30.0
         elif self.button["L1"] == 1:
             msg.angular.z = 10.0
         elif self.button["S"] == 1:
             msg.angular.z = 20.0
 
-        if self.button["R1"] == 1:
+        elif self.button["R1"] == 1:
             msg.angular.z = 999.0
         elif self.button["O"] == 1:
             msg.angular.z = 888.0
+        else:
+            msg.angular.z = -1 * self.pwm
 
+        self.get_logger().info(self.pwm)
         self.sent_drive.publish(msg)
         # self.displayInt(self.pwm, 6, 0, 3, False)
 

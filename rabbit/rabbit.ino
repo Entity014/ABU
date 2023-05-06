@@ -150,7 +150,7 @@ void subscription_callback(const void * msgin)
   }
   if (pwmm > 0)
   {
-    keep_pwmm = pwmm;
+    state = 1;
     if (once)
     {
       analogWrite(shoot_motor, abs(pwmm));
@@ -159,6 +159,7 @@ void subscription_callback(const void * msgin)
   }
   else
   {
+    state = 0;
     if (once)
     {
       analogWrite(shoot_motor, abs(pwmm));
@@ -166,15 +167,6 @@ void subscription_callback(const void * msgin)
     }
   }
   //------------------------------------------- spring -----------------------------------------//
-  if (msg->angular.z == 999)
-  {
-    digitalWrite(shoot_spring, HIGH);
-  }
-  else
-  {
-    digitalWrite(shoot_spring, LOW);
-  }
-  //------------------------------------------- reload -----------------------------------------//
   if (lim_switch1() == false)
   {
     pick_state = "up";
@@ -189,7 +181,18 @@ void subscription_callback(const void * msgin)
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
   }
-  if (msg->angular.z == 1)
+  if (msg->angular.z == 30)
+  {
+    digitalWrite(shoot_spring, HIGH);
+    digitalWrite(pick_up_down_ina, HIGH);
+    digitalWrite(pick_up_down_inb, LOW);
+  }
+  else if (msg->angular.z == 999)
+  {
+    digitalWrite(shoot_spring, HIGH);
+  }
+  //------------------------------------------- reload -----------------------------------------//
+  else if (msg->angular.z == 1)
   {
     if (pick_state == "up")
     {
@@ -203,28 +206,33 @@ void subscription_callback(const void * msgin)
     }
   }
   //------------------------------------------- up & down [ feed ] -----------------------------------------//
-  if (msg->angular.z == 10) //up
+  else if (msg->angular.z == 10) //up
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
   }
-  else if (msg->angular.z == 20 && lim_switch() == true) //low
+  else if (msg->angular.z == 20) //low
   {
     digitalWrite(pick_up_down_ina, LOW);
     digitalWrite(pick_up_down_inb, HIGH);
   }
-  else
+  else if (msg->angular.z == 0)
   {
+    digitalWrite(shoot_spring, LOW);
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, HIGH);
   }
+  else if (msg->angular.z < 0)
+  {
+    keep_pwmm = abs(msg->angular.z);
+  }
   //------------------------------------------- LCD -----------------------------------------//
-//  bigNum.displayLargeInt(keep_pwmm, 6, 0, 3, false);
-//  bigNum.displayLargeNumber(state, 0, 0);
-//  lcd.setCursor(5, 0);
-//  lcd.print("/");
-//  lcd.setCursor(4, 1);
-//  lcd.print("/");
+  bigNum.displayLargeInt(keep_pwmm, 6, 0, 3, false);
+  bigNum.displayLargeNumber(state, 0, 0);
+  lcd.setCursor(5, 0);
+  lcd.print("/");
+  lcd.setCursor(4, 1);
+  lcd.print("/");
 }
 
 void setup() {
@@ -253,10 +261,10 @@ void setup() {
   pinMode(pick_up_down_ina, OUTPUT);
   pinMode(pick_up_down_inb, OUTPUT);
 
-//  lcd.begin();
-//  lcd.backlight();
-//  bigNum.begin();
-//  lcd.clear();
+  lcd.begin();
+  lcd.backlight();
+  bigNum.begin();
+  lcd.clear();
 
   delay(1000);
 
