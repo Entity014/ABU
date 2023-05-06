@@ -1,8 +1,8 @@
 #include <micro_ros_arduino.h>
 #include <TeensyThreads.h>
 #include <stdio.h>
-#include <LiquidCrystal_I2C.h>
-#include <BigNumbers_I2C.h>
+//#include <LiquidCrystal_I2C.h>
+//#include <BigNumbers_I2C.h>
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -56,7 +56,7 @@ int state = 0;
 bool once = false;
 
 #define shoot_motor 29
-#define shoot_spring 19
+#define shoot_spring 33
 
 float prePwm = -1;
 

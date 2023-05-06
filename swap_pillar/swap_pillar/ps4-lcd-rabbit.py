@@ -40,7 +40,7 @@ class Ps4(Node):
 
         self.axes = {}
         # self.all2 = ["LX", "LY", "RX", "LT", "RT", "RY"]
-        self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]
+        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]
         for index, element in enumerate(self.all2):
             self.axes[element] = 0
         self.pwm = 0
@@ -240,8 +240,8 @@ class Ps4(Node):
         cos = math.cos(theta - math.pi / 4)
         Max = max(abs(sin), abs(cos))
         leftFront = power * cos / Max + turn
-        rightFront = power * sin / Max - turn
-        leftBack = power * sin / Max + turn
+        rightFront = power * sin / Max + turn
+        leftBack = power * sin / Max - turn
         rightBack = power * cos / Max - turn
 
         if (power + abs(turn)) > 1:
