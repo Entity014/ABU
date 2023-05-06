@@ -40,7 +40,7 @@ class Ps4(Node):
 
         self.axes = {}
         # self.all2 = ["LX", "LY", "RX", "LT", "RT", "RY"]
-        self.all2 = ["LX", "LY", "RX", "RY", "RT", "RT", "AX", "AY"]
+        self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]
         for index, element in enumerate(self.all2):
             self.axes[element] = 0
         self.pwm = 0
