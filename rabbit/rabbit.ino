@@ -56,7 +56,7 @@ int state = 0;
 bool once = false;
 
 #define shoot_motor 29
-#define shoot_spring 19
+#define shoot_spring 33
 
 float prePwm = -1;
 

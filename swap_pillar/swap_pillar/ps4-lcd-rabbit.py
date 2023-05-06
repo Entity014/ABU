@@ -314,7 +314,7 @@ class Ps4(Node):
         else:
             msg.angular.z = -1 * self.pwm
 
-        self.get_logger().info(self.pwm)
+        self.get_logger().info(str(self.pwm))
         self.sent_drive.publish(msg)
         # self.displayInt(self.pwm, 6, 0, 3, False)
 
