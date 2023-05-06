@@ -1,8 +1,8 @@
 #include <micro_ros_arduino.h>
-#include <stdio.h>
 #include <TeensyThreads.h>
-//#include <LiquidCrystal_I2C.h>
-//#include <BigNumbers_I2C.h>
+#include <stdio.h>
+#include <LiquidCrystal_I2C.h>
+#include <BigNumbers_I2C.h>
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -59,9 +59,9 @@ bool once = false;
 #define shoot_spring 33
 
 float prePwm = -1;
-//
-//LiquidCrystal_I2C lcd(0x27, 16, 2);
-//BigNumbers_I2C bigNum(&lcd);
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+BigNumbers_I2C bigNum(&lcd);
 
 // linear.x = ล้อซ้ายหน้า
 // linear.y = ล้อขวาหน้า
@@ -227,12 +227,12 @@ void subscription_callback(const void * msgin)
     keep_pwmm = abs(msg->angular.z);
   }
   //------------------------------------------- LCD -----------------------------------------//
-//  bigNum.displayLargeInt(keep_pwmm, 6, 0, 3, false);
-//  bigNum.displayLargeNumber(state, 0, 0);
-//  lcd.setCursor(5, 0);
-//  lcd.print("/");
-//  lcd.setCursor(4, 1);
-//  lcd.print("/");
+  bigNum.displayLargeInt(keep_pwmm, 6, 0, 3, false);
+  bigNum.displayLargeNumber(state, 0, 0);
+  lcd.setCursor(5, 0);
+  lcd.print("/");
+  lcd.setCursor(4, 1);
+  lcd.print("/");
 }
 
 void setup() {
@@ -261,10 +261,10 @@ void setup() {
   pinMode(pick_up_down_ina, OUTPUT);
   pinMode(pick_up_down_inb, OUTPUT);
 
-//  lcd.begin();
-//  lcd.backlight();
-//  bigNum.begin();
-//  lcd.clear();
+  lcd.begin();
+  lcd.backlight();
+  bigNum.begin();
+  lcd.clear();
 
   delay(1000);
 
