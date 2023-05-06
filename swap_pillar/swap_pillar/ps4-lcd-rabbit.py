@@ -141,11 +141,11 @@ class Ps4(Node):
         self.button["S"] = msg_in.buttons[3]
         self.button["L1"] = msg_in.buttons[6]
         self.button["R1"] = msg_in.buttons[7]
-        if msg_in.axes[5] > 0:
+        if msg_in.axes[5] < 0:
             self.button["L2"] = 1
         else:
             self.button["L2"] = 0
-        if msg_in.axes[4] > 0:
+        if msg_in.axes[4] < 0:
             self.button["R2"] = 1
         else:
             self.button["R2"] = 0
@@ -231,7 +231,7 @@ class Ps4(Node):
                 self.state_auto = 0
                 x = 0.0
                 y = 0.0
-
+        x = x * -1
         turn = self.axes["RX"]
         theta = math.atan2(y, x)
         power = math.hypot(x, y)
