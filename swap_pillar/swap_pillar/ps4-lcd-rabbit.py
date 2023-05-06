@@ -312,8 +312,8 @@ class Ps4(Node):
             msg.angular.z = 999.0
         elif self.button["O"] == 1:
             msg.angular.z = 888.0
-        else:
-            msg.angular.z = -1 * self.pwm
+        # else:
+        #     msg.angular.z = -1 * self.pwm
 
         self.get_logger().info(str(self.pwm))
         self.sent_drive.publish(msg)
