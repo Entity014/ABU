@@ -305,8 +305,6 @@ class Ps4(Node):
 
         if self.button["T"] == 1:
             msg.angular.z = 1.0
-        elif self.button["L1"] == 1 and self.button["R1"] == 1:
-            msg.angular.z = 30.0
         elif self.button["L1"] == 1:
             msg.angular.z = 10.0
         elif self.button["S"] == 1:
