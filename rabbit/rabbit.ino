@@ -1,8 +1,8 @@
 #include <micro_ros_arduino.h>
 #include <TeensyThreads.h>
 #include <stdio.h>
-//#include <LiquidCrystal_I2C.h>
-//#include <BigNumbers_I2C.h>
+// #include <LiquidCrystal_I2C.h>
+// #include <BigNumbers_I2C.h>
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -19,7 +19,6 @@ rcl_subscription_t subscriber;
 geometry_msgs__msg__Twist msg;
 
 rcl_init_options_t init_options;
-
 
 #define PWM1 1
 #define PWM2 5
@@ -41,10 +40,11 @@ int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 #define limit_s0 27
 #define limit_s1 16
 #define limit_s2 17
-//#define limit_s3 -1
+// #define limit_s3 -1
 
 #define pick_ina 40
 #define pick_inb 41
+#define pick_pwm 19
 #define pick_up_down_ina 25
 #define pick_up_down_inb 24
 String pick_state = "up";
@@ -60,8 +60,12 @@ bool once = false;
 
 float prePwm = -1;
 
-//LiquidCrystal_I2C lcd(0x27, 16, 2);
-//BigNumbers_I2C bigNum(&lcd);
+float preReload = -1;
+bool onceReload = false;
+bool onceStop = false;
+//
+// LiquidCrystal_I2C lcd(0x27, 16, 2);
+// BigNumbers_I2C bigNum(&lcd);
 
 // linear.x = ล้อซ้ายหน้า
 // linear.y = ล้อขวาหน้า
@@ -71,62 +75,87 @@ float prePwm = -1;
 // linear.z = เครื่องยิง
 // angular.z = เครื่องยก
 
-int lim_switch() {
+int lim_switch()
+{
   return digitalRead(limit_s0);
 }
 
-int lim_switch1() {
+int lim_switch1()
+{
   return digitalRead(limit_s1);
 }
 
-int lim_switch2() {
+int lim_switch2()
+{
   return digitalRead(limit_s2);
-
 }
-//int lim_switch3() {
-//  return int(digitalRead(limit_s3));
-//}
+// int lim_switch3() {
+//   return int(digitalRead(limit_s3));
+// }
 
-
-void subscription_callback(const void * msgin)
+void subscription_callback(const void *msgin)
 {
   //------------------------------------------- drive -----------------------------------------//
-  const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
-  if (msg->linear.x > 0) {
-    ina1 = 1; inb1 = 0;
+  const geometry_msgs__msg__Twist *msg = (const geometry_msgs__msg__Twist *)msgin;
+  if (msg->linear.x > 0)
+  {
+    ina1 = 1;
+    inb1 = 0;
   }
-  else if (msg->linear.x == 0) {
-    ina1 = 1; inb1 = 1;
+  else if (msg->linear.x == 0)
+  {
+    ina1 = 1;
+    inb1 = 1;
   }
-  else {
-    ina1 = 0; inb1 = 1;
+  else
+  {
+    ina1 = 0;
+    inb1 = 1;
   }
-  if (msg->linear.y > 0) {
-    ina2 = 1; inb2 = 0;
+  if (msg->linear.y > 0)
+  {
+    ina2 = 1;
+    inb2 = 0;
   }
-  else if (msg->linear.y == 0) {
-    ina2 = 1; inb2 = 1;
+  else if (msg->linear.y == 0)
+  {
+    ina2 = 1;
+    inb2 = 1;
   }
-  else {
-    ina2 = 0; inb2 = 1;
+  else
+  {
+    ina2 = 0;
+    inb2 = 1;
   }
-  if (msg->angular.x > 0) {
-    ina3 = 1; inb3 = 0;
+  if (msg->angular.x > 0)
+  {
+    ina3 = 1;
+    inb3 = 0;
   }
-  else if (msg->angular.x == 0) {
-    ina3 = 1; inb3 = 1;
+  else if (msg->angular.x == 0)
+  {
+    ina3 = 1;
+    inb3 = 1;
   }
-  else {
-    ina3 = 0; inb3 = 1;
+  else
+  {
+    ina3 = 0;
+    inb3 = 1;
   }
-  if (msg->angular.y > 0) {
-    ina4 = 1; inb4 = 0;
+  if (msg->angular.y > 0)
+  {
+    ina4 = 1;
+    inb4 = 0;
   }
-  else if (msg->angular.y == 0) {
-    ina4 = 1; inb4 = 1;
+  else if (msg->angular.y == 0)
+  {
+    ina4 = 1;
+    inb4 = 1;
   }
-  else {
-    ina4 = 0; inb4 = 1;
+  else
+  {
+    ina4 = 0;
+    inb4 = 1;
   }
   analogWrite(PWM1, abs(msg->linear.x));
   analogWrite(PWM2, abs(msg->linear.y));
@@ -166,12 +195,6 @@ void subscription_callback(const void * msgin)
     }
   }
   //------------------------------------------- spring -----------------------------------------//
-  if (msg->angular.z == 30)
-  {
-    digitalWrite(shoot_spring, HIGH);
-    digitalWrite(pick_up_down_ina, HIGH);
-    digitalWrite(pick_up_down_inb, LOW);
-  }
   if (msg->angular.z == 999)
   {
     digitalWrite(shoot_spring, HIGH);
@@ -181,12 +204,26 @@ void subscription_callback(const void * msgin)
     digitalWrite(shoot_spring, LOW);
   }
   //------------------------------------------- reload -----------------------------------------//
+  if (preReload != msg->angular.z)
+  {
+    preReload = msg->angular.z;
+    if (preReload == 1)
+    {
+      onceReload = true;
+      onceStop = true;
+    }
+  }
   if (lim_switch1() == false)
   {
     pick_state = "up";
     state = 1;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
+    if (onceStop)
+    {
+      analogWrite(pick_pwm, 0);
+      onceStop = false;
+    }
   }
   else if (lim_switch2() == false)
   {
@@ -194,6 +231,11 @@ void subscription_callback(const void * msgin)
     state = 2;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
+    if (onceStop)
+    {
+      analogWrite(pick_pwm, 0);
+      onceStop = false;
+    }
   }
   if (msg->angular.z == 1)
   {
@@ -201,20 +243,30 @@ void subscription_callback(const void * msgin)
     {
       digitalWrite(pick_ina, HIGH);
       digitalWrite(pick_inb, LOW);
+      if (onceReload)
+      {
+        analogWrite(pick_pwm, 100);
+        onceReload = false;
+      }
     }
     else
     {
       digitalWrite(pick_ina, LOW);
       digitalWrite(pick_inb, HIGH);
+      if (onceReload)
+      {
+        analogWrite(pick_pwm, 100);
+        onceReload = false;
+      }
     }
   }
   //------------------------------------------- up & down [ feed ] -----------------------------------------//
-  if (msg->angular.z == 10) //up
+  if (msg->angular.z == 10) // up
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
   }
-  else if (msg->angular.z == 20 && lim_switch() == true) //low
+  else if (msg->angular.z == 20) // low
   {
     digitalWrite(pick_up_down_ina, LOW);
     digitalWrite(pick_up_down_inb, HIGH);
@@ -233,7 +285,8 @@ void subscription_callback(const void * msgin)
   //  lcd.print("/");
 }
 
-void setup() {
+void setup()
+{
   pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
   pinMode(PWM3, OUTPUT);
@@ -277,15 +330,16 @@ void setup() {
   rclc_node_init_default(&node, "drive_uros", "", &support);
 
   rclc_subscription_init_default(
-    &subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-    "control_drive_topic");
+      &subscriber,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+      "control_drive_topic");
 
   rclc_executor_init(&executor, &support.context, 1, &allocator);
   rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA);
 }
 
-void loop() {
+void loop()
+{
   rclc_executor_spin_some(&executor, RCL_MS_TO_NS(300));
 }
