@@ -56,8 +56,10 @@ class Ps4(Node):
         self.list_debount_r = []
         self.list_debount_l = []
 
-        self.param_pwm_motor1 = 165.0  # ค่าสำหรับห่วงไกล
-        self.param_pwm_motor2 = 105.0  # ค่าสำหรับห่วงใกล้
+        self.param_pwm_motor0 = 250.0  # เสาฝั่งตรงข้าม
+        self.param_pwm_motor1 = 208.0  # เสากลาง
+        self.param_pwm_motor2 = 140.0  # เสาใกล้
+
         self.param_distance = 10
 
         for a in self.all:
@@ -269,7 +271,7 @@ class Ps4(Node):
             self.counter = 4
         if self.counter > 0:
             self.counter -= 1
-        if self.state > 1:
+        if self.state > 2:
             self.state = 0
         if self.state < 0:
             self.state = 1
@@ -277,6 +279,8 @@ class Ps4(Node):
             self.pwm = self.param_pwm_motor2 - self.assis_shoot
         elif self.state == 1:
             self.pwm = self.param_pwm_motor1 - self.assis_shoot
+        elif self.state == 2:
+            self.pwm = self.param_pwm_motor0 + self.assis_shoot
 
         if self.pwm > 255:
             self.pwm = 255.0
