@@ -51,46 +51,50 @@ while True:
     for cnt in contours:
         approx = cv2.approxPolyDP(cnt, 0.01 * cv2.arcLength(cnt, True), True)
         area = cv2.contourArea(cnt)
-        if area > 500 and len(approx) >= 4 and len(approx) <= 10:  # ? Blue
-            x, y, w, h = cv2.boundingRect(cnt)
-            # if len(approx) > 4:
-            if h / w > 0.5:
-                num += 1
-                center_obj = (int(x + (w / 2)), int(height / 2))
-                # distance_point = sqrt(pow(vector_cen[0] - (x + (w/2)), 2))
-                distance_point = vector_cen[0] - (x + (w / 2))
-                deltha_dis_min.append(abs(distance_point))
-                deltha_dis.append(distance_point)
+        x, y, w, h = cv2.boundingRect(cnt)
+        # if len(approx) > 4:
+        if (
+            (area > 500)
+            and (h / w > 0.5)
+            and (len(approx) >= 4)
+            and (len(approx) <= 10)
+        ):  # ? Blue
+            num += 1
+            center_obj = (int(x + (w / 2)), int(height / 2))
+            # distance_point = sqrt(pow(vector_cen[0] - (x + (w/2)), 2))
+            distance_point = vector_cen[0] - (x + (w / 2))
+            deltha_dis_min.append(abs(distance_point))
+            deltha_dis.append(distance_point)
 
-                # object_height = h
-                # distance = (object_width * focal_length) / object_height
-                # distance_Cam.append(distance)
+            # object_height = h
+            # distance = (object_width * focal_length) / object_height
+            # distance_Cam.append(distance)
 
-                if num > pre_num:
-                    pre_num = num
-                elif num == 1:
-                    pre_num = num
-                    abs_near_point = min(deltha_dis_min)
-                    near_point = deltha_dis[deltha_dis_min.index(abs_near_point)]
-                    # near_dis = round(
-                    #     distance_Cam[deltha_dis.index(near_point)], 2)
-                    deltha_dis.clear()
-                    deltha_dis_min.clear()
-                    # distance_Cam.clear()
+            if num > pre_num:
+                pre_num = num
+            elif num == 1:
+                pre_num = num
+                abs_near_point = min(deltha_dis_min)
+                near_point = deltha_dis[deltha_dis_min.index(abs_near_point)]
+                # near_dis = round(
+                #     distance_Cam[deltha_dis.index(near_point)], 2)
+                deltha_dis.clear()
+                deltha_dis_min.clear()
+                # distance_Cam.clear()
 
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), 2)
-                cv2.drawContours(frame, [cnt], 0, (255, 255, 0), -1)
-                cv2.putText(
-                    frame,
-                    f"Pole<{num}> {len(approx)} [ {(distance_point):.2f}]",
-                    (x, y),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1,
-                    (255, 0, 255),
-                    2,
-                )
-                cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
-                cv2.line(frame, center_coordinates, center_obj, (255, 0, 0), 2)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 0), 2)
+            cv2.drawContours(frame, [cnt], 0, (255, 255, 0), -1)
+            cv2.putText(
+                frame,
+                f"Pole<{num}> {len(approx)} [ {(distance_point):.2f}]",
+                (x, y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (255, 0, 255),
+                2,
+            )
+            cv2.circle(frame, center_obj, 5, (0, 0, 0), -1)
+            cv2.line(frame, center_coordinates, center_obj, (255, 0, 0), 2)
 
     print(near_point, abs_near_point)
     cv2.circle(frame, center_coordinates, 5, (0, 0, 255), -1)
