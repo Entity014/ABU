@@ -59,7 +59,7 @@ String pick_state = "up";
 
 float pwmm = 0;
 float keep_pwmm = 0;
-int state = 0;
+int statein = 0;
 
 bool once = false;
 
@@ -74,6 +74,11 @@ bool onceStop = false;
 //
 // LiquidCrystal_I2C lcd(0x27, 16, 2);
 // BigNumbers_I2C bigNum(&lcd);
+
+static uint32_t preTime;
+
+static uint32_t preT = 0;
+bool preTS = false;
 
 // linear.x = ล้อซ้ายหน้า
 // linear.y = ล้อขวาหน้า
@@ -182,7 +187,7 @@ void pick_fun(float msg) {
   }
   if (lim_switch1() == false) {
     pick_state = "up";
-    state = 1;
+    statein = 1;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
     if (onceStop) {
@@ -191,7 +196,7 @@ void pick_fun(float msg) {
     }
   } else if (lim_switch2() == false) {
     pick_state = "down";
-    state = 2;
+    statein = 2;
     digitalWrite(pick_ina, HIGH);
     digitalWrite(pick_inb, HIGH);
     if (onceStop) {
@@ -376,8 +381,7 @@ void renew() {
   digitalWrite(pick_ina, HIGH);
   digitalWrite(pick_inb, HIGH);
 
-  digitalWrite(shoot_motor_under, LOW);
-  digitalWrite(shoot_motor_top, LOW);
+  digitalWrite(shoot_motor, LOW);
 }
 
 
