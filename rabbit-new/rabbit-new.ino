@@ -8,23 +8,29 @@
 #include <rmw_microros/rmw_microros.h>
 #include <geometry_msgs/msg/twist.h>
 
-
 #define LED_PIN 13
-#define RCCHECK(fn) \
-  { \
-    rcl_ret_t temp_rc = fn; \
-    if ((temp_rc != RCL_RET_OK)) { return false; } \
+#define RCCHECK(fn)              \
+  {                              \
+    rcl_ret_t temp_rc = fn;      \
+    if ((temp_rc != RCL_RET_OK)) \
+    {                            \
+      return false;              \
+    }                            \
   }
-#define EXECUTE_EVERY_N_MS(MS, X) \
-  do { \
+#define EXECUTE_EVERY_N_MS(MS, X)      \
+  do                                   \
+  {                                    \
     static volatile int64_t init = -1; \
-    if (init == -1) { init = uxr_millis(); } \
-    if (uxr_millis() - init > MS) { \
-      X; \
-      init = uxr_millis(); \
-    } \
+    if (init == -1)                    \
+    {                                  \
+      init = uxr_millis();             \
+    }                                  \
+    if (uxr_millis() - init > MS)      \
+    {                                  \
+      X;                               \
+      init = uxr_millis();             \
+    }                                  \
   } while (0)
-
 
 //-----------------------------------------------------------------------------------//
 
@@ -55,6 +61,7 @@ int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 #define pick_pwm 19
 #define pick_up_down_ina 25
 #define pick_up_down_inb 24
+#define pick_up_down_pwm -1
 String pick_state = "up";
 
 float pwmm = 0;
@@ -63,15 +70,24 @@ int statein = 0;
 
 bool once = false;
 
-#define shoot_motor 29
-#define shoot_spring 33
+#define shoot_motor_ina -1
+#define shoot_motor_inb -1
+#define shoot_motor_pwm -1
+#define shoot_spring_ina -1
+#define shoot_spring_inb -1
+#define shoot_spring_pwm -1
 
 float prePwm = -1;
-
+float preUp_Down = -1;
 float preReload = -1;
+float preSpring = -1;
+
 bool onceReload = false;
 bool onceStop = false;
-//
+bool onceUp_Down = false;
+bool onceSpring = false;
+bool onceSpring_Stop = false;
+
 // LiquidCrystal_I2C lcd(0x27, 16, 2);
 // BigNumbers_I2C bigNum(&lcd);
 
@@ -88,78 +104,113 @@ bool preTS = false;
 // linear.z = เครื่องยิง
 // angular.z = เครื่องยก
 
-int lim_switch() {
+int lim_switch()
+{
   return digitalRead(limit_s0);
 }
 
-int lim_switch1() {
+int lim_switch1()
+{
   return digitalRead(limit_s1);
 }
 
-int lim_switch2() {
+int lim_switch2()
+{
   return digitalRead(limit_s2);
 }
 // int lim_switch3() {
 //   return int(digitalRead(limit_s3));
 // }
 
-void shoot_fun(float pwmm) {
-  if (prePwm != pwmm) {
+void shoot_fun(float pwmm)
+{
+  if (prePwm != pwmm)
+  {
     prePwm = pwmm;
     once = true;
   }
-  if (pwmm > 0) {
+  if (pwmm > 0)
+  {
     keep_pwmm = pwmm;
-    if (once) {
-      analogWrite(shoot_motor, abs(pwmm));
+    digitalWrite(shoot_motor_ina, HIGH);
+    digitalWrite(shoot_motor_inb, LOW);
+    if (once)
+    {
+      analogWrite(shoot_motor_pwm, abs(pwmm));
       once = false;
     }
-  } else {
-    if (once) {
-      analogWrite(shoot_motor, abs(pwmm));
+  }
+  else
+  {
+    digitalWrite(shoot_motor_ina, HIGH);
+    digitalWrite(shoot_motor_inb, HIGH);
+    if (once)
+    {
+      analogWrite(shoot_motor_pwm, abs(pwmm));
       once = false;
     }
   }
 }
 
-void drive_fun(float wheel1, float wheel2, float wheel3, float wheel4) {
-  if (wheel1 > 0) {
+void drive_fun(float wheel1, float wheel2, float wheel3, float wheel4)
+{
+  if (wheel1 > 0)
+  {
     ina1 = 1;
     inb1 = 0;
-  } else if (wheel1 == 0) {
+  }
+  else if (wheel1 == 0)
+  {
     ina1 = 1;
     inb1 = 1;
-  } else {
+  }
+  else
+  {
     ina1 = 0;
     inb1 = 1;
   }
-  if (wheel2 > 0) {
+  if (wheel2 > 0)
+  {
     ina2 = 1;
     inb2 = 0;
-  } else if (wheel2 == 0) {
+  }
+  else if (wheel2 == 0)
+  {
     ina2 = 1;
     inb2 = 1;
-  } else {
+  }
+  else
+  {
     ina2 = 0;
     inb2 = 1;
   }
-  if (wheel3 > 0) {
+  if (wheel3 > 0)
+  {
     ina3 = 1;
     inb3 = 0;
-  } else if (wheel3 == 0) {
+  }
+  else if (wheel3 == 0)
+  {
     ina3 = 1;
     inb3 = 1;
-  } else {
+  }
+  else
+  {
     ina3 = 0;
     inb3 = 1;
   }
-  if (wheel4 > 0) {
+  if (wheel4 > 0)
+  {
     ina4 = 1;
     inb4 = 0;
-  } else if (wheel4 == 0) {
+  }
+  else if (wheel4 == 0)
+  {
     ina4 = 1;
     inb4 = 1;
-  } else {
+  }
+  else
+  {
     ina4 = 0;
     inb4 = 1;
   }
@@ -177,45 +228,59 @@ void drive_fun(float wheel1, float wheel2, float wheel3, float wheel4) {
   digitalWrite(INB4, inb4);
 }
 
-void pick_fun(float msg) {
-  if (preReload != msg) {
+void pick_fun(float msg)
+{
+  if (preReload != msg)
+  {
     preReload = msg;
-    if (preReload == 1) {
+    if (preReload == 1)
+    {
       onceReload = true;
       onceStop = true;
     }
   }
-  if (lim_switch1() == false) {
+  if (lim_switch1() == false)
+  {
     pick_state = "up";
     statein = 1;
-    digitalWrite(pick_ina, HIGH);
-    digitalWrite(pick_inb, HIGH);
-    if (onceStop) {
-      analogWrite(pick_pwm, 0);
-      onceStop = false;
-    }
-  } else if (lim_switch2() == false) {
-    pick_state = "down";
-    statein = 2;
-    digitalWrite(pick_ina, HIGH);
-    digitalWrite(pick_inb, HIGH);
-    if (onceStop) {
+    digitalWrite(pick_ina, LOW);
+    digitalWrite(pick_inb, LOW);
+    if (onceStop)
+    {
       analogWrite(pick_pwm, 0);
       onceStop = false;
     }
   }
-  if (msg == 1) {
-    if (pick_state == "up") {
+  else if (lim_switch2() == false)
+  {
+    pick_state = "down";
+    statein = 2;
+    digitalWrite(pick_ina, LOW);
+    digitalWrite(pick_inb, LOW);
+    if (onceStop)
+    {
+      analogWrite(pick_pwm, 0);
+      onceStop = false;
+    }
+  }
+  if (msg == 1)
+  {
+    if (pick_state == "up")
+    {
       digitalWrite(pick_ina, HIGH);
       digitalWrite(pick_inb, LOW);
-      if (onceReload) {
+      if (onceReload)
+      {
         analogWrite(pick_pwm, 100);
         onceReload = false;
       }
-    } else {
+    }
+    else
+    {
       digitalWrite(pick_ina, LOW);
       digitalWrite(pick_inb, HIGH);
-      if (onceReload) {
+      if (onceReload)
+      {
         analogWrite(pick_pwm, 100);
         onceReload = false;
       }
@@ -223,46 +288,89 @@ void pick_fun(float msg) {
   }
 }
 
-void up_down_fun(float msg) {
-  if (msg == 10)  // up
+void up_down_fun(float msg)
+{
+  if (preUp_Down != msg)
+  {
+    preUp_Down = msg;
+    onceUp_Down = true;
+  }
+  if (msg == 10) // up
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
-  } else if (msg == 20)  // low
+    if (onceUp_Down)
+    {
+      analogWrite(pick_up_down_pwm, 255);
+      onceUp_Down = false;
+    }
+  }
+  else if (msg == 20) // low
   {
     digitalWrite(pick_up_down_ina, LOW);
     digitalWrite(pick_up_down_inb, HIGH);
-  } else {
+    if (onceUp_Down)
+    {
+      analogWrite(pick_up_down_pwm, 255);
+      onceUp_Down = false;
+    }
+  }
+  else
+  {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, HIGH);
+    if (onceUp_Down)
+    {
+      analogWrite(pick_up_down_pwm, 0);
+      onceUp_Down = false;
+    }
   }
 }
 
-void spring(float msg) {
-  if (msg == 999) {
-    digitalWrite(shoot_spring, HIGH);
-  } else {
-    digitalWrite(shoot_spring, LOW);
+// TODO: wait for edit
+void spring(float msg)
+{
+  if (preSpring != msg)
+  {
+    preSpring = msg;
+    onceSpring = true;
+  }
+  if (msg == 999)
+  {
+    digitalWrite(shoot_spring_ina, HIGH);
+    digitalWrite(shoot_spring_inb, LOW);
+    if (onceSpring)
+    {
+      analogWrite(shoot_spring_pwm, 255);
+      onceSpring = false;
+    }
+  }
+  else
+  {
+    digitalWrite(shoot_spring_ina, HIGH);
+    digitalWrite(shoot_spring_inb, HIGH);
+    if (onceSpring)
+    {
+      analogWrite(shoot_spring_pwm, 0);
+      onceSpring = false;
+    }
   }
 }
-
 
 //-----------------------------------------------------------------------------------//
 
-
-//basic
+// basic
 rclc_support_t support;
 rcl_node_t node;
 rcl_timer_t timer;
 rcl_allocator_t allocator;
 
-//publisher
+// publisher
 rclc_executor_t executor_pub;
 rcl_publisher_t publisher;
 geometry_msgs__msg__Twist msg_pub;
 
-
-//subscriber
+// subscriber
 rclc_executor_t executor_sub;
 rcl_subscription_t subscriber;
 geometry_msgs__msg__Twist msg_sub;
@@ -271,22 +379,26 @@ rcl_init_options_t init_options;
 
 bool micro_ros_init_successful;
 
-enum states {
+enum states
+{
   WAITING_AGENT,
   AGENT_AVAILABLE,
   AGENT_CONNECTED,
   AGENT_DISCONNECTED
 } state;
 
-void timer_callback(rcl_timer_t *timer, int64_t last_call_time) {
+void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
+{
   (void)last_call_time;
-  if (timer != NULL) {
+  if (timer != NULL)
+  {
     rcl_publish(&publisher, &msg_pub, NULL);
     msg_pub.linear.y++;
   }
 }
 
-void subscription_callback(const void *msgin) {
+void subscription_callback(const void *msgin)
+{
   const geometry_msgs__msg__Twist *msg_sub = (const geometry_msgs__msg__Twist *)msgin;
   drive_fun(msg_sub->linear.x, msg_sub->linear.y, msg_sub->angular.x, msg_sub->angular.y);
 
@@ -301,7 +413,8 @@ void subscription_callback(const void *msgin) {
 // - RMW_UXRCE_ENTITY_CREATION_DESTROY_TIMEOUT=0
 // - UCLIENT_MAX_SESSION_CONNECTION_ATTEMPTS=3
 
-bool create_entities() {
+bool create_entities()
+{
   allocator = rcl_get_default_allocator();
 
   init_options = rcl_get_zero_initialized_init_options();
@@ -310,34 +423,33 @@ bool create_entities() {
 
   rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
 
-
   // create init_options
-  //RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  // RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
   // create node
   RCCHECK(rclc_node_init_default(&node, "int32_publisher_rclc", "", &support));
 
   // create publisher
   RCCHECK(rclc_publisher_init_best_effort(
-    &publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-    "twist_topic"));
+      &publisher,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+      "twist_topic"));
 
   // create timer,
   const unsigned int timer_timeout = 100;
   RCCHECK(rclc_timer_init_default(
-    &timer,
-    &support,
-    RCL_MS_TO_NS(timer_timeout),
-    timer_callback));
+      &timer,
+      &support,
+      RCL_MS_TO_NS(timer_timeout),
+      timer_callback));
 
   // create subscriber
   RCCHECK(rclc_subscription_init_default(
-    &subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-    "control_drive_topic"));
+      &subscriber,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
+      "control_drive_topic"));
 
   // create executor publisher
   executor_pub = rclc_executor_get_zero_initialized_executor();
@@ -349,11 +461,11 @@ bool create_entities() {
   RCCHECK(rclc_executor_init(&executor_sub, &support.context, 1, &allocator));
   RCCHECK(rclc_executor_add_subscription(&executor_sub, &subscriber, &msg_sub, &subscription_callback, ON_NEW_DATA));
 
-
   return true;
 }
 
-void destroy_entities() {
+void destroy_entities()
+{
   rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
   (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
@@ -364,7 +476,8 @@ void destroy_entities() {
   rclc_support_fini(&support);
 }
 
-void renew() {
+void renew()
+{
   digitalWrite(PWM1, LOW);
   digitalWrite(PWM2, LOW);
   digitalWrite(PWM3, LOW);
@@ -378,15 +491,25 @@ void renew() {
   digitalWrite(INA4, HIGH);
   digitalWrite(INB4, HIGH);
 
+  digitalWrite(pick_pwm, LOW);
   digitalWrite(pick_ina, HIGH);
   digitalWrite(pick_inb, HIGH);
 
-  digitalWrite(shoot_motor, LOW);
+  digitalWrite(pick_up_down_pwm, LOW);
+  digitalWrite(pick_up_down_ina, HIGH);
+  digitalWrite(pick_up_down_inb, HIGH);
+
+  digitalWrite(shoot_motor_pwm, LOW);
+  digitalWrite(shoot_motor_ina, HIGH);
+  digitalWrite(shoot_motor_inb, HIGH);
+
+  digitalWrite(shoot_spring_pwm, LOW);
+  digitalWrite(shoot_spring_ina, HIGH);
+  digitalWrite(shoot_spring_inb, HIGH);
 }
 
-
-
-void setup() {
+void setup()
+{
   set_microros_transports();
   pinMode(LED_PIN, OUTPUT);
 
@@ -407,38 +530,48 @@ void setup() {
   msg_sub.angular.z = 0.0;
 }
 
-void loop() {
-  switch (state) {
-    case WAITING_AGENT:
-      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
-      break;
-    case AGENT_AVAILABLE:
-      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
-      if (state == WAITING_AGENT) {
-        destroy_entities();
-      };
-      break;
-    case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-      if (state == AGENT_CONNECTED) {
-        //rclc_executor_spin_some(&executor_pub, RCL_MS_TO_NS(100));
-        rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(100));
-      }
-      break;
-    case AGENT_DISCONNECTED:
+void loop()
+{
+  switch (state)
+  {
+  case WAITING_AGENT:
+    EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+    break;
+  case AGENT_AVAILABLE:
+    state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+    if (state == WAITING_AGENT)
+    {
       destroy_entities();
-      state = WAITING_AGENT;
-      break;
-    default:
-      break;
+    };
+    break;
+  case AGENT_CONNECTED:
+    EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+    if (state == AGENT_CONNECTED)
+    {
+      // rclc_executor_spin_some(&executor_pub, RCL_MS_TO_NS(100));
+      rclc_executor_spin_some(&executor_sub, RCL_MS_TO_NS(100));
+    }
+    break;
+  case AGENT_DISCONNECTED:
+    destroy_entities();
+    state = WAITING_AGENT;
+    break;
+  default:
+    break;
   }
 
-  if (state == AGENT_CONNECTED) {
+  if (state == AGENT_CONNECTED)
+  {
     digitalWrite(LED_PIN, 1);
-  } else {
-    if (millis() - preT > 250) {
-      if (preTS) digitalWrite(LED_PIN, HIGH);
-      else digitalWrite(LED_PIN, LOW);
+  }
+  else
+  {
+    if (millis() - preT > 250)
+    {
+      if (preTS)
+        digitalWrite(LED_PIN, HIGH);
+      else
+        digitalWrite(LED_PIN, LOW);
       preT = millis();
       preTS = !preTS;
     }
