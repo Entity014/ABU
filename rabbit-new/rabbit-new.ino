@@ -513,6 +513,37 @@ void setup()
   set_microros_transports();
   pinMode(LED_PIN, OUTPUT);
 
+  pinMode(PWM1, OUTPUT);
+  pinMode(PWM2, OUTPUT);
+  pinMode(PWM3, OUTPUT);
+  pinMode(PWM4, OUTPUT);
+  pinMode(INA1, OUTPUT);
+  pinMode(INA2, OUTPUT);
+  pinMode(INA3, OUTPUT);
+  pinMode(INA4, OUTPUT);
+  pinMode(INB1, OUTPUT);
+  pinMode(INB2, OUTPUT);
+  pinMode(INB3, OUTPUT);
+  pinMode(INB4, OUTPUT);
+
+  pinMode(limit_s0, INPUT_PULLUP);
+  pinMode(limit_s1, INPUT_PULLUP);
+  pinMode(limit_s2, INPUT_PULLUP);
+
+  pinMode(shoot_motor_ina, OUTPUT);
+  pinMode(shoot_motor_inb, OUTPUT);
+  pinMode(shoot_motor_pwm, OUTPUT);
+  pinMode(shoot_spring_ina, OUTPUT);
+  pinMode(shoot_spring_inb, OUTPUT);
+  pinMode(shoot_spring_pwm, OUTPUT);
+
+  pinMode(pick_ina, OUTPUT);
+  pinMode(pick_inb, OUTPUT);
+  pinMode(pick_pwm, OUTPUT);
+  pinMode(pick_up_down_ina, OUTPUT);
+  pinMode(pick_up_down_inb, OUTPUT);
+  pinMode(pick_up_down_pwm, OUTPUT);
+
   state = WAITING_AGENT;
 
   msg_pub.linear.x = 0.0;
