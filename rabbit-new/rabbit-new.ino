@@ -34,33 +34,32 @@
 
 //-----------------------------------------------------------------------------------//
 
-#define PWM1 1
-#define PWM2 5
-#define PWM3 22
-#define PWM4 4
+#define PWM1 0
+#define PWM2 23
+#define PWM3 28
+#define PWM4 33
 
-#define INA1 20
-#define INA2 6
-#define INA3 23
-#define INA4 3
+#define INA1 1
+#define INA2 21
+#define INA3 29
+#define INA4 34
 int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 
-#define INB1 21
-#define INB2 8
-#define INB3 0
-#define INB4 2
+#define INB1 2
+#define INB2 22
+#define INB3 27
+#define INB4 35
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
-#define limit_s0 27
-#define limit_s1 16
-#define limit_s2 17
-// #define limit_s3 -1
+#define limit_s0 -1
+#define limit_s1 40 // Top
+#define limit_s2 41 // Down
 
-#define pick_ina 40
-#define pick_inb 41
-#define pick_pwm 19
-#define pick_up_down_ina 25
-#define pick_up_down_inb 24
+#define pick_ina 25
+#define pick_inb 26
+#define pick_pwm 24
+#define pick_up_down_ina -1
+#define pick_up_down_inb -1
 #define pick_up_down_pwm -1
 String pick_state = "up";
 
@@ -68,25 +67,23 @@ float pwmm = 0;
 float keep_pwmm = 0;
 int statein = 0;
 
-bool once = false;
-
-#define shoot_motor_ina -1
-#define shoot_motor_inb -1
-#define shoot_motor_pwm -1
-#define shoot_spring_ina -1
-#define shoot_spring_inb -1
-#define shoot_spring_pwm -1
+#define shoot_motor_pwm 4
+#define shoot_motor_ina 5
+#define shoot_motor_inb 6
+#define shoot_spring_pwm 14
+#define shoot_spring_ina 16
+#define shoot_spring_inb 17
 
 float prePwm = -1;
 float preUp_Down = -1;
 float preReload = -1;
 float preSpring = -1;
 
+bool once = false;
 bool onceReload = false;
 bool onceStop = false;
 bool onceUp_Down = false;
 bool onceSpring = false;
-bool onceSpring_Stop = false;
 
 // LiquidCrystal_I2C lcd(0x27, 16, 2);
 // BigNumbers_I2C bigNum(&lcd);
@@ -118,9 +115,6 @@ int lim_switch2()
 {
   return digitalRead(limit_s2);
 }
-// int lim_switch3() {
-//   return int(digitalRead(limit_s3));
-// }
 
 void shoot_fun(float pwmm)
 {
@@ -132,8 +126,8 @@ void shoot_fun(float pwmm)
   if (pwmm > 0)
   {
     keep_pwmm = pwmm;
-    digitalWrite(shoot_motor_ina, HIGH);
-    digitalWrite(shoot_motor_inb, LOW);
+    digitalWrite(shoot_motor_ina, LOW);
+    digitalWrite(shoot_motor_inb, HIGH);
     if (once)
     {
       analogWrite(shoot_motor_pwm, abs(pwmm));
@@ -337,11 +331,11 @@ void spring(float msg)
   }
   if (msg == 999)
   {
-    digitalWrite(shoot_spring_ina, HIGH);
-    digitalWrite(shoot_spring_inb, LOW);
+    digitalWrite(shoot_spring_ina, LOW);
+    digitalWrite(shoot_spring_inb, HIGH);
     if (onceSpring)
     {
-      analogWrite(shoot_spring_pwm, 255);
+      analogWrite(shoot_spring_pwm, 150);
       onceSpring = false;
     }
   }

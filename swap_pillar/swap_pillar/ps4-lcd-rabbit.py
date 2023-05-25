@@ -31,13 +31,14 @@ class Ps4(Node):
         self.sent_drive_timer = self.create_timer(0.05, self.sent_drive_callback)
 
         self.button = {}
-        self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]
+        self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]  # PS4
+        # self.all = ["X", "O", "S", "T", "Dummy5", "L1", "R1", "Dummy8", "Dummy9", "L", "R", "PS"] # XBOX
         for index, element in enumerate(self.all):
             self.button[element] = 0
 
         self.axes = {}
-        # self.all2 = ["LX", "LY", "RX", "LT", "RT", "RY"]
-        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]
+        self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # PS4
+        # self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"] # XBOX
         for index, element in enumerate(self.all2):
             self.axes[element] = 0
         self.pwm = 0
@@ -73,25 +74,30 @@ class Ps4(Node):
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
-        self.button["X"] = msg_in.buttons[0]
-        self.button["O"] = msg_in.buttons[1]
-        self.button["T"] = msg_in.buttons[4]
-        self.button["S"] = msg_in.buttons[3]
-        self.button["L1"] = msg_in.buttons[6]
-        self.button["R1"] = msg_in.buttons[7]
-        if msg_in.axes[5] < 0:
-            self.button["L2"] = 1
-        else:
-            self.button["L2"] = 0
-        if msg_in.axes[4] < 0:
-            self.button["R2"] = 1
-        else:
-            self.button["R2"] = 0
-        self.button["L"] = msg_in.buttons[10]
-        self.button["R"] = msg_in.buttons[11]
-        self.button["PS"] = msg_in.buttons[-1]
-        # for index, element in enumerate(self.all):
-        #     self.button[element] = msg_in.buttons[index]
+        # self.button["X"] = msg_in.buttons[0]
+        # self.button["O"] = msg_in.buttons[1]
+
+        # Xbox
+        # self.button["S"] = msg_in.buttons[3]
+        # self.button["T"] = msg_in.buttons[4]
+        # self.button["L1"] = msg_in.buttons[6]
+        # self.button["R1"] = msg_in.buttons[7]
+        # self.button["L"] = msg_in.buttons[10]
+        # self.button["R"] = msg_in.buttons[11]
+        # self.button["PS"] = msg_in.buttons[-1]
+        # self.axes["AX"] = msg_in.axes[-2]
+        # self.axes["AY"] = msg_in.axes[-1]
+        # if msg_in.axes[5] < 0:
+        #     self.button["L2"] = 1
+        # else:
+        #     self.button["L2"] = 0
+        # if msg_in.axes[4] < 0:
+        #     self.button["R2"] = 1
+        # else:
+        #     self.button["R2"] = 0
+
+        for index, element in enumerate(self.all):
+            self.button[element] = msg_in.buttons[index]
         # 			print(f"{self.all[index]}  :  {self.button[element]}")
 
         for index, element in enumerate(self.all2):
@@ -99,8 +105,6 @@ class Ps4(Node):
                 self.axes[element] = 0
             else:
                 self.axes[element] = msg_in.axes[index]
-        self.axes["AX"] = msg_in.axes[-2]
-        self.axes["AY"] = msg_in.axes[-1]
 
     def sub_callback_cam(self, msg_in):
         self.distance = msg_in.data
