@@ -39,28 +39,28 @@
 #define PWM3 28
 #define PWM4 33
 
-#define INA1 1
+#define INA1 2
 #define INA2 21
 #define INA3 29
-#define INA4 34
+#define INA4 35
 int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 
-#define INB1 2
+#define INB1 1
 #define INB2 22
 #define INB3 27
-#define INB4 35
+#define INB4 34
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
 #define limit_s0 -1
 #define limit_s1 40 // Top
 #define limit_s2 41 // Down
 
+#define pick_pwm 24
 #define pick_ina 25
 #define pick_inb 26
-#define pick_pwm 24
-#define pick_up_down_ina -1
-#define pick_up_down_inb -1
-#define pick_up_down_pwm -1
+#define pick_up_down_pwm 15
+#define pick_up_down_ina 16
+#define pick_up_down_inb 17
 String pick_state = "up";
 
 float pwmm = 0;
@@ -70,9 +70,9 @@ int statein = 0;
 #define shoot_motor_pwm 4
 #define shoot_motor_ina 5
 #define shoot_motor_inb 6
-#define shoot_spring_pwm 14
-#define shoot_spring_ina 16
-#define shoot_spring_inb 17
+#define shoot_spring_pwm -1
+#define shoot_spring_ina 18
+#define shoot_spring_inb 19
 
 float prePwm = -1;
 float preUp_Down = -1;
@@ -261,8 +261,8 @@ void pick_fun(float msg)
   {
     if (pick_state == "up")
     {
-      digitalWrite(pick_ina, HIGH);
-      digitalWrite(pick_inb, LOW);
+      digitalWrite(pick_ina, LOW);
+      digitalWrite(pick_inb, HIGH);
       if (onceReload)
       {
         analogWrite(pick_pwm, 100);
@@ -271,8 +271,8 @@ void pick_fun(float msg)
     }
     else
     {
-      digitalWrite(pick_ina, LOW);
-      digitalWrite(pick_inb, HIGH);
+      digitalWrite(pick_ina, HIGH);
+      digitalWrite(pick_inb, LOW);
       if (onceReload)
       {
         analogWrite(pick_pwm, 100);

@@ -76,8 +76,6 @@ class Ps4(Node):
         self.new_dat = msg_in
         # self.button["X"] = msg_in.buttons[0]
         # self.button["O"] = msg_in.buttons[1]
-
-        # Xbox
         # self.button["S"] = msg_in.buttons[3]
         # self.button["T"] = msg_in.buttons[4]
         # self.button["L1"] = msg_in.buttons[6]
