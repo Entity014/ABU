@@ -83,6 +83,8 @@ class Ps4(Node):
             self.axes[a] = 0
         self.axes["AX"] = 0
         self.axes["AY"] = 0
+        self.button["L2"] = 0
+        self.button["R2"] = 0
 
         self.preShoot = -1
         self.stateShoot = 0
