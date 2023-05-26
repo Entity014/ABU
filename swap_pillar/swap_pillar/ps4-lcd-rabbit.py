@@ -31,14 +31,31 @@ class Ps4(Node):
         self.sent_drive_timer = self.create_timer(0.05, self.sent_drive_callback)
 
         self.button = {}
-        self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]  # PS4
-        # self.all = ["X", "O", "S", "T", "Dummy5", "L1", "R1", "Dummy8", "Dummy9", "L", "R", "PS"] # XBOX
+        # self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]  # PS4
+        self.all = [
+            "X",
+            "O",
+            "Dummy2",
+            "S",
+            "T",
+            "Dummy5",
+            "L1",
+            "R1",
+            "Dummy8",
+            "Dummy9",
+            "L",
+            "R",
+            "Dummy12",
+            "Dummy13",
+            "Dummy14",
+            "PS",
+        ]  # XBOX
         for index, element in enumerate(self.all):
             self.button[element] = 0
 
         self.axes = {}
-        self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # PS4
-        # self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"] # XBOX
+        # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # PS4
+        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # XBOX
         for index, element in enumerate(self.all2):
             self.axes[element] = 0
         self.pwm = 0
@@ -85,14 +102,14 @@ class Ps4(Node):
         # self.button["PS"] = msg_in.buttons[-1]
         # self.axes["AX"] = msg_in.axes[-2]
         # self.axes["AY"] = msg_in.axes[-1]
-        # if msg_in.axes[5] < 0:
-        #     self.button["L2"] = 1
-        # else:
-        #     self.button["L2"] = 0
-        # if msg_in.axes[4] < 0:
-        #     self.button["R2"] = 1
-        # else:
-        #     self.button["R2"] = 0
+        if msg_in.axes[5] < 0:
+            self.button["L2"] = 1
+        else:
+            self.button["L2"] = 0
+        if msg_in.axes[4] < 0:
+            self.button["R2"] = 1
+        else:
+            self.button["R2"] = 0
 
         for index, element in enumerate(self.all):
             self.button[element] = msg_in.buttons[index]
