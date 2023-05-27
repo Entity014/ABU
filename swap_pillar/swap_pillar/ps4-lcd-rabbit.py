@@ -143,12 +143,6 @@ class Ps4(Node):
             if (self.axes["AX"] > 0) or (self.axes["AY"] > 0):
                 y = -1 * (self.axes["AX"])
                 x = -1 * self.axes["AY"]
-            elif (self.axes["AX"] < 0) or (self.axes["AY"] < 0):
-                y = -1 * (self.axes["AX"])
-                x = -1 * self.axes["AY"]
-            else:
-                y = -1 * (self.axes["LX"])
-                x = -1 * self.axes["LY"]
                 if self.stateDriveMode == 1:
                     if x != 0.0 and y == 0.0:
                         x = (abs(x) / x) * 0.55
@@ -157,23 +151,44 @@ class Ps4(Node):
                     else:
                         x = 0.0
                         y = 0.0
-                    # if y != 0.0:
-                    #     y = (abs(y) / y) * 0.55
-                    # if (x > limit) and (y > limit):
-                    #     x = 0.707
-                    #     y = 0.707
-                    # elif (x < in_limit) and (y > limit):
-                    #     x = -0.707
-                    #     y = 0.707
-                    # elif (x < in_limit) and (y < in_limit):
-                    #     x = -0.707
-                    #     y = -0.707
-                    # elif (x > limit) and (y < in_limit):
-                    #     x = 0.707
-                    #     y = -0.707
-                    # else:
-                    #     x = 0.0
-                    #     y = 0.0
+                elif self.stateDriveMode == 2:
+                    self.stateDriveMode = 0
+
+            elif (self.axes["AX"] < 0) or (self.axes["AY"] < 0):
+                y = -1 * (self.axes["AX"])
+                x = -1 * self.axes["AY"]
+                if self.stateDriveMode == 1:
+                    if x != 0.0 and y == 0.0:
+                        x = (abs(x) / x) * 0.55
+                    elif x == 0.0 and y != 0.0:
+                        y = (abs(y) / y) * 0.55
+                    else:
+                        x = 0.0
+                        y = 0.0
+                elif self.stateDriveMode == 2:
+                    self.stateDriveMode = 0
+
+            else:
+                y = -1 * (self.axes["LX"])
+                x = -1 * self.axes["LY"]
+                if self.stateDriveMode == 1:
+                    if y != 0.0:
+                        y = (abs(y) / y) * 0.55
+                    if (x > limit) and (y > limit):
+                        x = 0.707
+                        y = 0.707
+                    elif (x < in_limit) and (y > limit):
+                        x = -0.707
+                        y = 0.707
+                    elif (x < in_limit) and (y < in_limit):
+                        x = -0.707
+                        y = -0.707
+                    elif (x > limit) and (y < in_limit):
+                        x = 0.707
+                        y = -0.707
+                    else:
+                        x = 0.0
+                        y = 0.0
                 elif self.stateDriveMode == 2:
                     self.stateDriveMode = 0
 
