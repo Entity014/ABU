@@ -71,9 +71,9 @@ class Ps4(Node):
         self.list_debount_r = []
         self.list_debount_l = []
 
-        self.param_pwm_motor0 = 250.0  # เสาฝั่งตรงข้าม
-        self.param_pwm_motor1 = 208.0  # เสากลาง
-        self.param_pwm_motor2 = 140.0  # เสาใกล้
+        self.param_pwm_motor0 = 194.0  # เสาฝั่งตรงข้าม
+        self.param_pwm_motor1 = 224.0  # เสากลาง
+        self.param_pwm_motor2 = 144.0  # เสาใกล้
 
         self.param_distance = 10
 
@@ -93,17 +93,7 @@ class Ps4(Node):
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
-        # self.button["X"] = msg_in.buttons[0]
-        # self.button["O"] = msg_in.buttons[1]
-        # self.button["S"] = msg_in.buttons[3]
-        # self.button["T"] = msg_in.buttons[4]
-        # self.button["L1"] = msg_in.buttons[6]
-        # self.button["R1"] = msg_in.buttons[7]
-        # self.button["L"] = msg_in.buttons[10]
-        # self.button["R"] = msg_in.buttons[11]
-        # self.button["PS"] = msg_in.buttons[-1]
-        # self.axes["AX"] = msg_in.axes[-2]
-        # self.axes["AY"] = msg_in.axes[-1]
+        # XBOX
         if msg_in.axes[5] < 0:
             self.button["L2"] = 1
         else:
@@ -269,6 +259,8 @@ class Ps4(Node):
 
         if self.button["T"] == 1:
             msg.angular.z = 1.0
+        elif self.button["L1"] == 1 and self.button["R1"] == 1:
+            msg.angular.z = 30.0
         elif self.button["L1"] == 1:
             msg.angular.z = 10.0
         elif self.button["S"] == 1:

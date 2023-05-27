@@ -227,9 +227,13 @@ void pick_fun(float msg)
   if (preReload != msg)
   {
     preReload = msg;
+//    onceReload = true;
     if (preReload == 1)
     {
       onceReload = true;
+    }
+    else
+    {
       onceStop = true;
     }
   }
@@ -289,7 +293,7 @@ void up_down_fun(float msg)
     preUp_Down = msg;
     onceUp_Down = true;
   }
-  if (msg == 10) // up
+  if ((msg == 10) || (msg == 30)) // up
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
@@ -329,13 +333,13 @@ void spring(float msg)
     preSpring = msg;
     onceSpring = true;
   }
-  if (msg == 999)
+  if ((msg == 999) || (msg == 30))
   {
     digitalWrite(shoot_spring_ina, LOW);
     digitalWrite(shoot_spring_inb, HIGH);
     if (onceSpring)
     {
-      analogWrite(shoot_spring_pwm, 150);
+      analogWrite(shoot_spring_pwm, 255);
       onceSpring = false;
     }
   }
