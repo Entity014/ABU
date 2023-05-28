@@ -84,11 +84,11 @@ bool onceReload = false;
 bool onceStop = false;
 bool onceUp_Down = false;
 bool onceSpring = false;
+bool onceSpringAuto = false;
+bool onceSpringAutoStop = false;
 
 // LiquidCrystal_I2C lcd(0x27, 16, 2);
 // BigNumbers_I2C bigNum(&lcd);
-
-static uint32_t preTime;
 
 static uint32_t preT = 0;
 bool preTS = false;
@@ -227,7 +227,7 @@ void pick_fun(float msg)
   if (preReload != msg)
   {
     preReload = msg;
-//    onceReload = true;
+    //    onceReload = true;
     if (preReload == 1)
     {
       onceReload = true;
@@ -325,13 +325,14 @@ void up_down_fun(float msg)
   }
 }
 
-// TODO: wait for edit
 void spring(float msg)
 {
   if (preSpring != msg)
   {
     preSpring = msg;
     onceSpring = true;
+    onceSpringAuto = true;
+    onceSpringAutoStop = true;
   }
   if ((msg == 999) || (msg == 30))
   {
@@ -343,14 +344,27 @@ void spring(float msg)
       onceSpring = false;
     }
   }
+  else if (lim_switch == true)
+  {
+    digitalWrite(shoot_spring_ina, LOW);
+    digitalWrite(shoot_spring_inb, HIGH);
+    if (onceSpringAuto)
+    {
+      analogWrite(shoot_spring_pwm, 255);
+      onceSpringAuto = false;
+      onceSpringAutoStop = true;
+    }
+  }
   else
   {
     digitalWrite(shoot_spring_ina, HIGH);
     digitalWrite(shoot_spring_inb, HIGH);
-    if (onceSpring)
+    if (onceSpring || onceSpringAutoStop)
     {
       analogWrite(shoot_spring_pwm, 0);
       onceSpring = false;
+      onceSpringAutoStop = false;
+      onceSpringAuto = true;
     }
   }
 }
