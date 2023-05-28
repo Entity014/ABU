@@ -51,7 +51,7 @@ int ina1 = 0, ina2 = 0, ina3 = 0, ina4 = 0;
 #define INB4 34
 int inb1 = 0, inb2 = 0, inb3 = 0, inb4 = 0;
 
-#define limit_s0 -1
+#define limit_s0 39 // Spring
 #define limit_s1 40 // Top
 #define limit_s2 41 // Down
 
@@ -344,7 +344,7 @@ void spring(float msg)
       onceSpring = false;
     }
   }
-  else if (lim_switch == true)
+  else if (lim_switch() == true)
   {
     digitalWrite(shoot_spring_ina, LOW);
     digitalWrite(shoot_spring_inb, HIGH);
