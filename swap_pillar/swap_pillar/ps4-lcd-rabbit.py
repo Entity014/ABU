@@ -72,9 +72,9 @@ class Ps4(Node):
         self.list_debount_r = []
         self.list_debount_l = []
 
-        self.param_pwm_motor0 = 194.0  # เสาฝั่งตรงข้าม
-        self.param_pwm_motor1 = 224.0  # เสากลาง
-        self.param_pwm_motor2 = 144.0  # เสาใกล้
+        self.param_pwm_motor0 = 160.0  # เสาฝั่งตรงข้าม
+        self.param_pwm_motor1 = 210.0  # เสากลาง
+        self.param_pwm_motor2 = 122.0  # เสาใกล้
 
         self.param_distance = 10
 
