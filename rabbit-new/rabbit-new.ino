@@ -265,8 +265,8 @@ void pick_fun(float msg)
   {
     if (pick_state == "up")
     {
-      digitalWrite(pick_ina, LOW);
-      digitalWrite(pick_inb, HIGH);
+      digitalWrite(pick_ina, HIGH);
+      digitalWrite(pick_inb, LOW);
       if (onceReload)
       {
         analogWrite(pick_pwm, 100);
@@ -275,8 +275,8 @@ void pick_fun(float msg)
     }
     else
     {
-      digitalWrite(pick_ina, HIGH);
-      digitalWrite(pick_inb, LOW);
+      digitalWrite(pick_ina, LOW);
+      digitalWrite(pick_inb, HIGH);
       if (onceReload)
       {
         analogWrite(pick_pwm, 100);
@@ -336,8 +336,8 @@ void spring(float msg)
   }
   if ((msg == 999) || (msg == 30))
   {
-    digitalWrite(shoot_spring_ina, LOW);
-    digitalWrite(shoot_spring_inb, HIGH);
+    digitalWrite(shoot_spring_ina, HIGH);
+    digitalWrite(shoot_spring_inb, LOW);
     if (onceSpring)
     {
       analogWrite(shoot_spring_pwm, 255);
@@ -346,8 +346,8 @@ void spring(float msg)
   }
   else if (lim_switch() == true)
   {
-    digitalWrite(shoot_spring_ina, LOW);
-    digitalWrite(shoot_spring_inb, HIGH);
+    digitalWrite(shoot_spring_ina, HIGH);
+    digitalWrite(shoot_spring_inb, LOW);
     if (onceSpringAuto)
     {
       analogWrite(shoot_spring_pwm, 255);

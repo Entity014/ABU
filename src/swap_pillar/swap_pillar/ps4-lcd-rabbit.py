@@ -39,10 +39,44 @@ class Ps4(Node):
         )
         self.sent_drive_timer = self.create_timer(0.05, self.sent_drive_callback)
 
-        self.joy_type = "xbox"
-        self.all, self.all2 = self.joy_layout(self.joy_type)
+        self.all = [
+            "X",
+            "O",
+            "Dummy2",
+            "S",
+            "T",
+            "Dummy5",
+            "L1",
+            "R1",
+            "Dummy8",
+            "Dummy9",
+            "L",
+            "R",
+            "Dummy12",
+            "Dummy13",
+            "Dummy14",
+            "PS",
+        ]  # ? XBOX
+        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
+        # self.all = [
+        #         "X",
+        #         "O",
+        #         "T",
+        #         "S",
+        #         "L1",
+        #         "R1",
+        #         "L2",
+        #         "R2",
+        #         "L",
+        #         "R",
+        #         "PS",
+        #     ]  # ? PS4
+        # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
         self.button = {element: 0 for element in self.all}
         self.axes = {element: 0 for element in self.all2}
+
+        self.button["L2"] = 0
+        self.button["R2"] = 0
 
         self.pwm = 0
         self.state = 0
@@ -63,9 +97,6 @@ class Ps4(Node):
 
         self.param_distance = 10
 
-        self.button["L2"] = 0
-        self.button["R2"] = 0
-
         self.preShoot = -1
         self.stateShoot = 0
         self.preDriveMode = -1
@@ -73,64 +104,20 @@ class Ps4(Node):
 
         self.joyState = False
 
-    def joy_layout(self, type: str):
-        type = type.lower()
-        buttons, axes = [], []
-        if type == "xbox":
-            buttons = [
-                "X",
-                "O",
-                "Dummy2",
-                "S",
-                "T",
-                "Dummy5",
-                "L1",
-                "R1",
-                "Dummy8",
-                "Dummy9",
-                "L",
-                "R",
-                "Dummy12",
-                "Dummy13",
-                "Dummy14",
-                "PS",
-            ]  # ? XBOX
-            axes = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
-        else:
-            buttons = [
-                "X",
-                "O",
-                "T",
-                "S",
-                "L1",
-                "R1",
-                "L2",
-                "R2",
-                "L",
-                "R",
-                "PS",
-            ]  # ? PS4
-            axes = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
-        return buttons, axes
-
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
         # ? XBOX
-        if self.joy_type == "XBOX":
-            if msg_in.axes[5] < 0:
-                self.button["L2"] = 1
-            else:
-                self.button["L2"] = 0
-            if msg_in.axes[4] < 0:
-                self.button["R2"] = 1
-            else:
-                self.button["R2"] = 0
+        if msg_in.axes[5] < 0:
+            self.button["L2"] = 1
+        else:
+            self.button["L2"] = 0
+        if msg_in.axes[4] < 0:
+            self.button["R2"] = 1
+        else:
+            self.button["R2"] = 0
 
-        self.button = {
-            element: msg_in.buttons[index] for index, element in enumerate(self.all)
-        }
-        # for index, element in enumerate(self.all):
-        #     self.button[element] = msg_in.buttons[index]
+        for index, element in enumerate(self.all):
+            self.button[element] = msg_in.buttons[index]
         #     print(f"{self.all[index]}  :  {self.button[element]}")
 
         for index, element in enumerate(self.all2):
