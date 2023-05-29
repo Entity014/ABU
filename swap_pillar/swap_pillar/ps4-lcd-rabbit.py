@@ -7,6 +7,7 @@ from geometry_msgs.msg import Twist
 from rclpy import qos
 
 import math
+import numpy as np
 
 
 class Ps4(Node):
@@ -31,7 +32,7 @@ class Ps4(Node):
         self.sent_drive_timer = self.create_timer(0.05, self.sent_drive_callback)
 
         self.button = {}
-        # self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]  # PS4
+        # self.all = ["X", "O", "T", "S", "L1", "R1", "L2", "R2", "L", "R", "PS"]  # ? PS4
         self.all = [
             "X",
             "O",
@@ -49,13 +50,13 @@ class Ps4(Node):
             "Dummy13",
             "Dummy14",
             "PS",
-        ]  # XBOX
+        ]  # ? XBOX
         for index, element in enumerate(self.all):
             self.button[element] = 0
 
         self.axes = {}
-        # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # PS4
-        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # XBOX
+        # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
+        self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
         for index, element in enumerate(self.all2):
             self.axes[element] = 0
         self.pwm = 0
@@ -93,7 +94,7 @@ class Ps4(Node):
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
-        # XBOX
+        # ? XBOX
         if msg_in.axes[5] < 0:
             self.button["L2"] = 1
         else:
@@ -131,18 +132,16 @@ class Ps4(Node):
 
         if self.state_auto == 0:
             if (self.axes["AX"] != 0) or (self.axes["AY"] != 0):
-                y = -1 * (self.axes["AX"])
+                y = -1 * self.axes["AX"]
                 x = -1 * self.axes["AY"]
                 if self.stateDriveMode == 1:
-                    if x != 0.0:
-                        x = (abs(x) / x) * 0.315
-                    if y != 0.0:
-                        y = (abs(y) / y) * 0.315
+                    x = np.interp(x, [-1, 1], [-0.392, 0.392])
+                    y = np.interp(y, [-1, 1], [-0.392, 0.392])
                 elif self.stateDriveMode == 2:
                     self.stateDriveMode = 0
 
             else:
-                y = -1 * (self.axes["LX"])
+                y = -1 * self.axes["LX"]
                 x = -1 * self.axes["LY"]
                 # if self.stateDriveMode == 1:
                 #     if y != 0.0:
@@ -189,7 +188,7 @@ class Ps4(Node):
                 y = 0.0
 
         y = y * -1
-        turn = self.axes["RX"]
+        turn = np.interp(self.axes["RX"], [-1, 1], [-0.392, 0.392])
         theta = math.atan2(y, x)
         power = math.hypot(x, y)
         sin = math.sin(theta - math.pi / 4)
