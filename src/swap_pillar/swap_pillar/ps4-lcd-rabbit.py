@@ -26,6 +26,14 @@ class Ps4(Node):
         )
         self.cam
 
+        self.joyCon = self.create_subscription(
+            String,
+            "joy_connection_status",
+            self.sub_callback_joyCon,
+            qos_profile=qos.qos_profile_sensor_data,
+        )
+        self.joyCon
+
         self.sent_drive = self.create_publisher(
             Twist, "control_drive_topic", qos_profile=qos.qos_profile_system_default
         )
@@ -92,6 +100,8 @@ class Ps4(Node):
         self.preDriveMode = -1
         self.stateDriveMode = 0
 
+        self.joyState = False
+
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
         # ? XBOX
@@ -113,6 +123,13 @@ class Ps4(Node):
                 self.axes[element] = 0
             else:
                 self.axes[element] = msg_in.axes[index]
+
+    def sub_callback_joyCon(self, msg_in):
+        self.connectionString = msg_in.data
+        if self.connectionString == "JoyCon":
+            self.joyState = True
+        else:
+            self.joyState = False
 
     def sub_callback_cam(self, msg_in):
         self.distance = msg_in.data
@@ -269,8 +286,15 @@ class Ps4(Node):
             msg.angular.z = 999.0
         elif self.button["O"] == 1:
             msg.angular.z = 888.0
-        # else:
-        #     msg.angular.z = -1 * self.pwm
+        # //------------------------------------------------------------------------------------------------//
+
+        if not self.joyState:
+            msg.linear.x = 0.0
+            msg.linear.y = 0.0
+            msg.linear.z = 0.0
+            msg.angular.x = 0.0
+            msg.angular.y = 0.0
+            msg.angular.z = 0.0
 
         self.get_logger().info(str(self.pwm))
         self.sent_drive.publish(msg)
