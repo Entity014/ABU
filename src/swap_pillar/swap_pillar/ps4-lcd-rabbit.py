@@ -351,7 +351,7 @@ class Ps4(Node):
         self.gui(tempMsg)
 
         # //------------------------------------------------------------------------------------------------//
-        self.get_logger().info(str(self.cheatState))
+        self.get_logger().info(str(self.pwm))
         self.sent_drive.publish(msg)
 
     def gui(self, msg_temp):
