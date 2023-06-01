@@ -3,7 +3,8 @@ import cv2
 import math
 import numpy as np
 import datetime
-import nanocamera as nano
+
+# import nanocamera as nano
 from rclpy.node import Node
 from sensor_msgs.msg import Joy, Image
 from std_msgs.msg import String, Float64
@@ -447,6 +448,9 @@ class Ps4(Node):
         current_time = datetime.datetime.now()
         elapsed_time = current_time - self.start_time
         modee = "normal"
+        hours = 0
+        minutes = 0
+        seconds = 0
         if elapsed_time >= self.target_delta:
             current_time = "TimeUp!!!"
             modee = "timeup"
