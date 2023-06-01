@@ -3,6 +3,7 @@ import cv2
 import math
 import numpy as np
 import datetime
+import nanocamera as nano
 from rclpy.node import Node
 from sensor_msgs.msg import Joy, Image
 from std_msgs.msg import String, Float64
@@ -52,9 +53,9 @@ class Ps4(Node):
             "Dummy9",
             "L",
             "R",
-            "Dummy12",
-            "Dummy13",
-            "Dummy14",
+            "XBOX",
+            "LS",
+            "RS",
             "PS",
         ]  # ? XBOX
         self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
@@ -70,7 +71,9 @@ class Ps4(Node):
         #     "L",
         #     "R",
         #     "PS",
-        # ]  # ? PS4
+        #     "LS",
+        #     "RS"
+        # ? PS4
         # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
         self.button = {element: 0 for element in self.all}
         self.axes = {element: 0 for element in self.all2}
@@ -104,24 +107,32 @@ class Ps4(Node):
 
         self.joyState = False
 
-        self.cap = cv2.VideoCapture(0)
-        self.width_frame, self.height_frame = (760, 480)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width_frame)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height_frame)
+        self.width_frame, self.height_frame = (600, 1024)
+        # self.cap = nano.Camera(width=1024, height=600, fps=30)
+        # self.cap = cv2.VideoCapture(0)
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width_frame)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height_frame)
         self.debugState = False
         self.cheatState = 0
+        self.window_state = "fullscreen"
+
+        self.start_time = datetime.datetime.now()
+        self.target_delta = datetime.timedelta(minutes=3, seconds=10)
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
         # ? XBOX
-        if msg_in.axes[5] == -1:
+        if msg_in.axes[5] < 0:
             self.button["L2"] = 1
         else:
             self.button["L2"] = 0
-        if msg_in.axes[4] == -1:
+        if msg_in.axes[4] < 0:
             self.button["R2"] = 1
         else:
             self.button["R2"] = 0
+        if (self.button["LS"] == 1) and (self.button["RS"] == 1):
+            self.start_time = datetime.datetime.now()
+            self.target_delta = datetime.timedelta(minutes=3, seconds=10)
 
         for index, element in enumerate(self.all):
             self.button[element] = msg_in.buttons[index]
@@ -265,7 +276,7 @@ class Ps4(Node):
         elif self.state == 1:
             self.pwm = self.param_pwm_motor1 - self.assis_shoot
         elif self.state == 2:
-            self.pwm = self.param_pwm_motor0 + self.assis_shoot
+            self.pwm = self.param_pwm_motor0 - self.assis_shoot
 
         if self.pwm > 255:
             self.pwm = 255.0
@@ -356,9 +367,9 @@ class Ps4(Node):
 
     def gui(self, msg_temp):
         block = [
-            [50, int(self.height_frame - 50), 100, 50],
-            [150, int(self.height_frame - 50), 100, 50],
-            [250, int(self.height_frame - 50), 100, 50],
+            [50, 80, self.width_frame - 50, 100],
+            [50, 180, self.width_frame - 50, 100],
+            [50, 280, self.width_frame - 50, 100],
         ]
 
         text_msg_temp = [
@@ -370,12 +381,11 @@ class Ps4(Node):
             "msg.angular.z",
         ]
 
-        ret, frame = self.cap.read()
-        if not ret:
-            exit()
-
+        # frame = self.cap.read()
+        frame = np.ones((self.width_frame, self.height_frame, 3), np.uint8) * 255
         frame = cv2.resize(frame, (self.width_frame, self.height_frame))
-        frame = cv2.flip(frame, 1)
+        frame = cv2.flip(frame, 0)
+        # frame = cv2.flip(frame, 1)
         frame = self.draw_power_bar(frame, self.pwm)
 
         self.draw_mode(frame=frame, block=block, mode=self.state)
@@ -401,17 +411,61 @@ class Ps4(Node):
                     3,
                 )
 
-        cv2.namedWindow("Webcam", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("Webcam", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+
+        self.toggle_fullscreen()
         cv2.imshow("Webcam", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             # closing all open windows
             cv2.destroyAllWindows()
             exit()
 
+    def toggle_fullscreen(self):
+        cv2.namedWindow("Webcam", cv2.WND_PROP_FULLSCREEN)
+        if self.window_state == "normal":
+            cv2.setWindowProperty("Webcam", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
+        elif self.window_state == "fullscreen":
+            cv2.setWindowProperty(
+                "Webcam", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN
+            )
+        cv2.setMouseCallback("Webcam", self.mouse_callback)
+
+    def mouse_callback(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONUP:
+            if (self.window_state) == "normal":
+                self.window_state = "fullscreen"
+            else:
+                self.window_state = "normal"
+
     def draw_mode(self, frame, block, mode):
-        text_block = ["N", "M", "F"]
-        current_time = datetime.datetime.now().strftime("%H:%M:%S")
+        text_block = [
+            f"Near {self.param_pwm_motor0}",
+            f"Mediam {self.param_pwm_motor1}",
+            f"Enemy {self.param_pwm_motor2}",
+        ]
+        # current_time = datetime.datetime.now().strftime("%H:%M:%S")
+        current_time = datetime.datetime.now()
+        elapsed_time = current_time - self.start_time
+        modee = "normal"
+        if elapsed_time >= self.target_delta:
+            current_time = "TimeUp!!!"
+            modee = "timeup"
+        else:
+            elapsed_time = elapsed_time.seconds - 10
+            if elapsed_time <= 0:
+                elapsed_time *= -1
+                hours = elapsed_time // 3600
+                minutes = (elapsed_time // 60) % 60
+                seconds = elapsed_time % 60
+                modee = "start"
+                seconds = elapsed_time % 60
+                current_time = f"Start in {seconds}"
+            else:
+                hours = elapsed_time // 3600
+                minutes = (elapsed_time // 60) % 60
+                seconds = elapsed_time % 60
+                current_time = f"{hours} : {minutes} : {seconds}"
+
         text_size_time, _ = cv2.getTextSize(
             current_time, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3
         )
@@ -419,9 +473,11 @@ class Ps4(Node):
             text = f"{text_block[index]}"
             x, y, width, height = arr
             if index == mode:
-                cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), -1)
+                cv2.rectangle(frame, (x, y), (x + width, y + height), (162, 223, 0), -1)
             else:
-                cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 255), -1)
+                cv2.rectangle(
+                    frame, (x, y), (x + width, y + height), (200, 188, 243), -1
+                )
             cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 0), 2)
 
             text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
@@ -439,10 +495,10 @@ class Ps4(Node):
         cv2.putText(
             frame,
             current_time,
-            (int((self.width_frame - text_size_time[0]) / 2), 50),
+            (int((width - text_size_time[0]) / 2), 50),
             cv2.FONT_HERSHEY_SIMPLEX,
             1.5,
-            (0, 255, 0),
+            self.text_color(hours, minutes, seconds, modee),
             3,
             cv2.LINE_AA,
         )
@@ -461,20 +517,20 @@ class Ps4(Node):
         if value_pwm <= 85:
             return color_zone1
         elif value_pwm <= 60:
-            value = (value_pwm - 85) / (60 - 85)
+            value = (value_pwm - 85) / (170 - 85)
             return self.interpolate_color(color_zone1, color_zone2, value)
         else:
-            value = (value_pwm - 60) / (255 - 60)
+            value = (value_pwm - 170) / (255 - 170)
             return self.interpolate_color(color_zone2, color_zone3, value)
 
     def draw_power_bar(self, frame, value_pwm):
         pwm_height = int((value_pwm / 255) * self.height_frame)
         pwm_color = self.get_zone_color(value_pwm)
         text_size_pwm, _ = cv2.getTextSize(
-            f"{value_pwm}", cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3
+            f"{value_pwm}", cv2.FONT_HERSHEY_SIMPLEX, 6, 20
         )
-        text_x_pwm = 50 + int((150 - text_size_pwm[0]) / 2)
-        text_y_pwm = int((80 + text_size_pwm[1]) / 2)
+        text_x_pwm = 50 + int((self.width_frame - 50 - text_size_pwm[0]) / 2)
+        text_y_pwm = 280 + int((self.height_frame - 280 + text_size_pwm[1]) / 2)
         cv2.rectangle(
             frame,
             (0, (self.height_frame - pwm_height)),
@@ -489,15 +545,15 @@ class Ps4(Node):
 
         cv2.rectangle(
             frame,
-            (50, 0),
-            (202, 80),
-            (255, 255, 255),
+            (50, 280),
+            (self.width_frame, int(self.height_frame)),
+            (238, 232, 248),
             -1,
         )
         cv2.rectangle(
             frame,
-            (50, 0),
-            (202, 80),
+            (50, 280),
+            (self.width_frame, int(self.height_frame)),
             (0, 0, 0),
             2,
         )
@@ -506,13 +562,25 @@ class Ps4(Node):
             f"{value_pwm}",
             (text_x_pwm, text_y_pwm),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1.5,
-            (0, 255, 0),
-            3,
+            6,
+            (0, 0, 0),
+            20,
             cv2.LINE_AA,
         )
 
         return frame
+
+    def text_color(self, hours, minutes, seconds, mode):
+        if mode == "timeup" or mode == "start":
+            return (0, 0, 0)
+        elif hours == 0 and minutes >= 2 and seconds >= 30:
+            return (99, 102, 255)
+        elif hours == 0 and minutes >= 1 and seconds >= 30:
+            return (80, 135, 250)
+        elif hours == 0 and minutes >= 2 and seconds >= 0:
+            return (80, 135, 250)
+        else:
+            return (0, 250, 0)
 
 
 def main():

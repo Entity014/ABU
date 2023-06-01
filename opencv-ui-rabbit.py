@@ -3,7 +3,7 @@ import numpy as np
 from moviepy.editor import VideoFileClip
 import datetime
 
-width, height = (760, 480)
+width, height = (780, 480)
 
 color_zone1 = (0, 255, 0)
 color_zone2 = (255, 165, 0)
@@ -18,34 +18,34 @@ def get_gif_frame(clip, duration):
 
 
 def draw_mode(frame, block, mode):
-    text_block = ["N", "M", "F"]
+    text_block = ["Near", "Mediam", "Enemy"]
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
-    text_size_time, _ = cv2.getTextSize(current_time, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
+    text_size_time, _ = cv2.getTextSize(current_time, cv2.FONT_HERSHEY_SIMPLEX, 2.5, 3)
     for index, arr in enumerate(block):
         text = f"{text_block[index]}"
-        x, y, width, height = arr
+        x, y, width_x, height_y = arr
         if index == mode:
-            cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), -1)
+            cv2.rectangle(frame, (x, y), (x + width_x, y + height_y), (0, 255, 0), -1)
         else:
-            cv2.rectangle(frame, (x, y), (x + width, y + height), (255, 0, 0), -1)
-        cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 0), 2)
+            cv2.rectangle(frame, (x, y), (x + width_x, y + height_y), (255, 0, 0), -1)
+        cv2.rectangle(frame, (x, y), (x + width_x, y + height_y), (0, 0, 0), 2)
 
         text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-        text_x = x + int((width - text_size[0]) / 2)
-        text_y = y + int((height + text_size[1]) / 2)
+        text_x = x + int((width_x - text_size[0]) / 2)
+        text_y = y + int((height_y + text_size[1]) / 2)
         cv2.putText(
             frame,
             text,
             (text_x, text_y),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1.5,
+            2.5,
             (0, 0, 255),
             3,
         )
     cv2.putText(
         frame,
         current_time,
-        (int((760 - text_size_time[0]) / 2), 50),
+        (int((width - text_size_time[0]) / 2), 50),
         cv2.FONT_HERSHEY_SIMPLEX,
         1.5,
         (0, 255, 0),
@@ -75,24 +75,24 @@ def get_zone_color(value_pwm):
 def draw_power_bar(frame, value_pwm):
     pwm_height = int((value_pwm / 255) * height)
     pwm_color = get_zone_color(value_pwm)
-    text_size_pwm, _ = cv2.getTextSize(f"{value_pwm}", cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-    text_x_pwm = 50 + int((150 - text_size_pwm[0]) / 2)
-    text_y_pwm = int((80 + text_size_pwm[1]) / 2)
+    text_size_pwm, _ = cv2.getTextSize(f"{value_pwm}", cv2.FONT_HERSHEY_SIMPLEX, 3, 3)
+    text_x_pwm = 50 + int((width - text_size_pwm[0]) / 2)
+    text_y_pwm = int(height - 100) + int((100 + text_size_pwm[1]) / 2)
     cv2.rectangle(frame, (0, (height - pwm_height)), (50, height), pwm_color, -1)
     cv2.rectangle(frame, (0, 0), (50, (height - pwm_height)), (0, 0, 0), -1)
     cv2.rectangle(frame, (0, 0), (50, height), (0, 0, 0), 2)
 
     cv2.rectangle(
         frame,
-        (50, 0),
-        (202, 80),
+        (50, int(height - 100)),
+        (width, int(height)),
         (255, 255, 255),
         -1,
     )
     cv2.rectangle(
         frame,
-        (50, 0),
-        (202, 80),
+        (50, int(height - 100)),
+        (width, int(height)),
         (0, 0, 0),
         2,
     )
@@ -101,8 +101,8 @@ def draw_power_bar(frame, value_pwm):
         f"{value_pwm}",
         (text_x_pwm, text_y_pwm),
         cv2.FONT_HERSHEY_SIMPLEX,
-        1.5,
-        (0, 255, 0),
+        3,
+        (0, 0, 0),
         3,
         cv2.LINE_AA,
     )
@@ -117,9 +117,9 @@ def main():
 
     percentage = 0
     block = [
-        [50, int(height - 50), 100, 50],
-        [150, int(height - 50), 100, 50],
-        [250, int(height - 50), 100, 50],
+        [50, 80, width - 50, 100],
+        [50, 180, width - 50, 100],
+        [50, 280, width - 50, 100],
     ]
 
     gif_path = (
@@ -162,8 +162,7 @@ def main():
         )
 
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        cv2.namedWindow("Webcam", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("Webcam", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         cv2.imshow("Webcam", frame)
         if cv2.waitKey(1) == ord("q"):
             break

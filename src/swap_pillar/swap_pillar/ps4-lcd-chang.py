@@ -108,6 +108,8 @@ class Ps4(Node):
         self.width_frame, self.height_frame = (760, 480)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width_frame)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height_frame)
+        self.debugState = False
+        self.cheatState = 0
 
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
@@ -263,7 +265,7 @@ class Ps4(Node):
         elif self.state == 1:
             self.pwm = self.param_pwm_motor1 - self.assis_shoot
         elif self.state == 2:
-            self.pwm = self.param_pwm_motor0 + self.assis_shoot
+            self.pwm = self.param_pwm_motor0 - self.assis_shoot
 
         if self.pwm > 255:
             self.pwm = 255.0
