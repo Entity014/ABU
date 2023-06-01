@@ -1,13 +1,13 @@
 import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import Joy
-from std_msgs.msg import String
-from std_msgs.msg import Float64
-from geometry_msgs.msg import Twist
-from rclpy import qos
-
+import cv2
 import math
 import numpy as np
+import datetime
+from rclpy.node import Node
+from sensor_msgs.msg import Joy, Image
+from std_msgs.msg import String, Float64
+from geometry_msgs.msg import Twist
+from rclpy import qos
 
 
 class Ps4(Node):
@@ -59,18 +59,18 @@ class Ps4(Node):
         ]  # ? XBOX
         self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
         # self.all = [
-        #         "X",
-        #         "O",
-        #         "T",
-        #         "S",
-        #         "L1",
-        #         "R1",
-        #         "L2",
-        #         "R2",
-        #         "L",
-        #         "R",
-        #         "PS",
-        #     ]  # ? PS4
+        #     "X",
+        #     "O",
+        #     "T",
+        #     "S",
+        #     "L1",
+        #     "R1",
+        #     "L2",
+        #     "R2",
+        #     "L",
+        #     "R",
+        #     "PS",
+        # ]  # ? PS4
         # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
         self.button = {element: 0 for element in self.all}
         self.axes = {element: 0 for element in self.all2}
@@ -91,8 +91,8 @@ class Ps4(Node):
         self.list_debount_r = []
         self.list_debount_l = []
 
-        self.param_pwm_motor0 = 160.0  # เสาฝั่งตรงข้าม
-        self.param_pwm_motor1 = 210.0  # เสากลาง
+        self.param_pwm_motor0 = 163.0  # เสาฝั่งตรงข้าม
+        self.param_pwm_motor1 = 205.0  # เสากลาง
         self.param_pwm_motor2 = 122.0  # เสาใกล้
 
         self.param_distance = 10
@@ -104,14 +104,21 @@ class Ps4(Node):
 
         self.joyState = False
 
+        self.cap = cv2.VideoCapture(0)
+        self.width_frame, self.height_frame = (760, 480)
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.width_frame)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height_frame)
+        self.debugState = False
+        self.cheatState = 0
+
     def sub_callback(self, msg_in):  # subscription topic
         self.new_dat = msg_in
         # ? XBOX
-        if msg_in.axes[5] < 0:
+        if msg_in.axes[5] == -1:
             self.button["L2"] = 1
         else:
             self.button["L2"] = 0
-        if msg_in.axes[4] < 0:
+        if msg_in.axes[4] == -1:
             self.button["R2"] = 1
         else:
             self.button["R2"] = 0
@@ -143,6 +150,10 @@ class Ps4(Node):
 
         x = 0.0
         y = 0.0
+        msg.linear.x = 0.0
+        msg.linear.y = 0.0
+        msg.angular.x = 0.0
+        msg.angular.y = 0.0
 
         if self.preDriveMode != self.button["L"]:
             self.preDriveMode = self.button["L"]
@@ -156,12 +167,14 @@ class Ps4(Node):
                 if self.stateDriveMode == 1:
                     x = np.interp(x, [-1, 1], [-0.392, 0.392])
                     y = np.interp(y, [-1, 1], [-0.392, 0.392])
-                elif self.stateDriveMode == 2:
+                else:
                     self.stateDriveMode = 0
 
             else:
                 y = -1 * self.axes["LX"]
                 x = -1 * self.axes["LY"]
+                if self.stateDriveMode > 1:
+                    self.stateDriveMode = 0
                 # if self.stateDriveMode == 1:
                 #     if y != 0.0:
                 #         y = (abs(y) / y) * 0.55
@@ -297,9 +310,209 @@ class Ps4(Node):
             msg.angular.x = 0.0
             msg.angular.y = 0.0
             msg.angular.z = 0.0
+        # //------------------------------------------------------------------------------------------------//
+        tempMsg = [
+            msg.linear.x,
+            msg.linear.y,
+            msg.linear.z,
+            msg.angular.x,
+            msg.angular.y,
+            msg.angular.z,
+        ]
+        for key_press_axes in self.axes:
+            if self.axes[key_press_axes] != 0:
+                if self.cheatState == 0 and self.axes["AY"] == 1:
+                    self.cheatState = 1
+                elif self.cheatState == 1 and self.axes["AY"] == -1:
+                    self.cheatState = 2
+                elif self.cheatState == 2 and self.axes["AX"] == 1:
+                    self.cheatState = 3
+                elif self.cheatState == 3 and self.axes["AX"] == -1:
+                    self.cheatState = 4
+                elif self.axes["LT"] != 0:
+                    self.cheatState = self.cheatState
+                elif self.axes["RT"] != 0:
+                    self.cheatState = self.cheatState
+                else:
+                    self.cheatState = 0
+        for key_press_button in self.button:
+            if self.button[key_press_button] != 0:
+                if self.cheatState == 4 and self.button["X"] == 1:
+                    self.cheatState = 5
+                elif self.cheatState == 5:
+                    if self.debugState:
+                        self.debugState = False
+                    else:
+                        self.debugState = True
+                    self.cheatState = 0
+                else:
+                    self.cheatState = 0
 
-        self.get_logger().info(str(self.pwm))
+        self.gui(tempMsg)
+
+        # //------------------------------------------------------------------------------------------------//
+        self.get_logger().info(str(self.cheatState))
         self.sent_drive.publish(msg)
+
+    def gui(self, msg_temp):
+        block = [
+            [50, int(self.height_frame - 50), 100, 50],
+            [150, int(self.height_frame - 50), 100, 50],
+            [250, int(self.height_frame - 50), 100, 50],
+        ]
+
+        text_msg_temp = [
+            "msg.linear.x",
+            "msg.linear.y",
+            "msg.linear.z",
+            "msg.angular.x",
+            "msg.angular.y",
+            "msg.angular.z",
+        ]
+
+        ret, frame = self.cap.read()
+        if not ret:
+            exit()
+
+        frame = cv2.resize(frame, (self.width_frame, self.height_frame))
+        frame = cv2.flip(frame, 1)
+        frame = self.draw_power_bar(frame, self.pwm)
+
+        self.draw_mode(frame=frame, block=block, mode=self.state)
+
+        if self.debugState:
+            cv2.rectangle(
+                frame, (0, 0), (self.width_frame, self.height_frame), (0, 0, 0), -1
+            )
+            for i, value in enumerate(msg_temp):
+                text_msg_size, _ = cv2.getTextSize(
+                    f"{text_msg_temp[i]}: {value}", cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3
+                )
+                cv2.putText(
+                    frame,
+                    f"{text_msg_temp[i]}: {value}",
+                    (
+                        int((self.width_frame / 2) - (text_msg_size[0] / 2)),
+                        int(i * 80 + 50),
+                    ),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.5,
+                    (0, 255, 0),
+                    3,
+                )
+
+        cv2.namedWindow("Webcam", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Webcam", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.imshow("Webcam", frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            # closing all open windows
+            cv2.destroyAllWindows()
+            exit()
+
+    def draw_mode(self, frame, block, mode):
+        text_block = ["N", "M", "F"]
+        current_time = datetime.datetime.now().strftime("%H:%M:%S")
+        text_size_time, _ = cv2.getTextSize(
+            current_time, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3
+        )
+        for index, arr in enumerate(block):
+            text = f"{text_block[index]}"
+            x, y, width, height = arr
+            if index == mode:
+                cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 255, 0), -1)
+            else:
+                cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 255), -1)
+            cv2.rectangle(frame, (x, y), (x + width, y + height), (0, 0, 0), 2)
+
+            text_size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
+            text_x = x + int((width - text_size[0]) / 2)
+            text_y = y + int((height + text_size[1]) / 2)
+            cv2.putText(
+                frame,
+                text,
+                (text_x, text_y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.5,
+                (255, 0, 0),
+                3,
+            )
+        cv2.putText(
+            frame,
+            current_time,
+            (int((self.width_frame - text_size_time[0]) / 2), 50),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.5,
+            (0, 255, 0),
+            3,
+            cv2.LINE_AA,
+        )
+
+    def interpolate_color(self, start_color, end_color, value):
+        b = int(start_color[0] + (end_color[0] - start_color[0]) * value)
+        g = int(start_color[1] + (end_color[1] - start_color[1]) * value)
+        r = int(start_color[2] + (end_color[2] - start_color[2]) * value)
+        return (b, g, r)
+
+    def get_zone_color(self, value_pwm):
+        color_zone1 = (0, 255, 0)
+        color_zone2 = (0, 165, 255)
+        color_zone3 = (0, 0, 255)
+
+        if value_pwm <= 85:
+            return color_zone1
+        elif value_pwm <= 60:
+            value = (value_pwm - 85) / (60 - 85)
+            return self.interpolate_color(color_zone1, color_zone2, value)
+        else:
+            value = (value_pwm - 60) / (255 - 60)
+            return self.interpolate_color(color_zone2, color_zone3, value)
+
+    def draw_power_bar(self, frame, value_pwm):
+        pwm_height = int((value_pwm / 255) * self.height_frame)
+        pwm_color = self.get_zone_color(value_pwm)
+        text_size_pwm, _ = cv2.getTextSize(
+            f"{value_pwm}", cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3
+        )
+        text_x_pwm = 50 + int((150 - text_size_pwm[0]) / 2)
+        text_y_pwm = int((80 + text_size_pwm[1]) / 2)
+        cv2.rectangle(
+            frame,
+            (0, (self.height_frame - pwm_height)),
+            (50, self.height_frame),
+            pwm_color,
+            -1,
+        )
+        cv2.rectangle(
+            frame, (0, 0), (50, (self.height_frame - pwm_height)), (0, 0, 0), -1
+        )
+        cv2.rectangle(frame, (0, 0), (50, self.height_frame), (0, 0, 0), 2)
+
+        cv2.rectangle(
+            frame,
+            (50, 0),
+            (202, 80),
+            (255, 255, 255),
+            -1,
+        )
+        cv2.rectangle(
+            frame,
+            (50, 0),
+            (202, 80),
+            (0, 0, 0),
+            2,
+        )
+        cv2.putText(
+            frame,
+            f"{value_pwm}",
+            (text_x_pwm, text_y_pwm),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.5,
+            (0, 255, 0),
+            3,
+            cv2.LINE_AA,
+        )
+
+        return frame
 
 
 def main():
