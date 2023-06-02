@@ -332,39 +332,34 @@ class Ps4(Node):
             msg.angular.y,
             msg.angular.z,
         ]
-        for key_press_axes in self.axes:
-            if self.axes[key_press_axes] != 0:
-                if self.cheatState == 0 and self.axes["AY"] == 1:
-                    self.cheatState = 1
-                elif self.cheatState == 1 and self.axes["AY"] == -1:
-                    self.cheatState = 2
-                elif self.cheatState == 2 and self.axes["AX"] == 1:
-                    self.cheatState = 3
-                elif self.cheatState == 3 and self.axes["AX"] == -1:
-                    self.cheatState = 4
-                elif self.axes["LT"] != 0:
-                    self.cheatState = self.cheatState
-                elif self.axes["RT"] != 0:
-                    self.cheatState = self.cheatState
-                else:
-                    self.cheatState = 0
+        if self.axes["LX"] != 0:
+            self.cheatState = 0
+        elif self.axes["LY"] != 0:
+            self.cheatState = 0
+        elif self.axes["RX"] != 0:
+            self.cheatState = 0
+        elif self.axes["RY"] != 0:
+            self.cheatState = 0
+        elif self.axes["AX"] != 0:
+            self.cheatState = 0
+        elif self.axes["AY"] != 0:
+            self.cheatState = 0
+
         for key_press_button in self.button:
             if self.button[key_press_button] != 0:
-                if self.cheatState == 4 and self.button["X"] == 1:
-                    self.cheatState = 5
-                elif self.cheatState == 5:
-                    if self.debugState:
-                        self.debugState = False
-                    else:
-                        self.debugState = True
-                    self.cheatState = 0
-                else:
-                    self.cheatState = 0
+                self.cheatState = 0
+
+        if self.cheatState >= 7:
+            if not self.debugState:
+                self.debugState = True
+            else:
+                self.debugState = False
+            self.cheatState = 0
 
         self.gui(tempMsg)
 
         # //------------------------------------------------------------------------------------------------//
-        self.get_logger().info(str(self.pwm))
+        self.get_logger().info(str(self.cheatState))
         self.sent_drive.publish(msg)
 
     def gui(self, msg_temp):
@@ -438,6 +433,7 @@ class Ps4(Node):
                 self.window_state = "fullscreen"
             else:
                 self.window_state = "normal"
+                self.cheatState += 1
 
     def draw_mode(self, frame, block, mode):
         text_block = [
