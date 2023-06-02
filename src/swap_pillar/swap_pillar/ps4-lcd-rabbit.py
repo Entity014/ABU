@@ -74,7 +74,7 @@ class Ps4(Node):
         #     "PS",
         #     "LS",
         #     "RS"
-        # ? PS4
+        # ] # ? PS4
         # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
         self.button = {element: 0 for element in self.all}
         self.axes = {element: 0 for element in self.all2}
@@ -131,6 +131,7 @@ class Ps4(Node):
             self.button["R2"] = 1
         else:
             self.button["R2"] = 0
+
         if (self.button["LS"] == 1) and (self.button["RS"] == 1):
             self.start_time = datetime.datetime.now()
             self.target_delta = datetime.timedelta(minutes=3, seconds=10)
@@ -387,7 +388,7 @@ class Ps4(Node):
         frame = cv2.resize(frame, (self.width_frame, self.height_frame))
         frame = cv2.flip(frame, 0)
         # frame = cv2.flip(frame, 1)
-        frame = self.draw_power_bar(frame, self.pwm)
+        frame = self.draw_power_bar(frame, self.pwm, msg_temp[2])
 
         self.draw_mode(frame=frame, block=block, mode=self.state)
 
@@ -527,7 +528,7 @@ class Ps4(Node):
             value = (value_pwm - 170) / (255 - 170)
             return self.interpolate_color(color_zone2, color_zone3, value)
 
-    def draw_power_bar(self, frame, value_pwm):
+    def draw_power_bar(self, frame, value_pwm, value_msg):
         pwm_height = int((value_pwm / 255) * self.height_frame)
         pwm_color = self.get_zone_color(value_pwm)
         text_size_pwm, _ = cv2.getTextSize(
@@ -547,13 +548,22 @@ class Ps4(Node):
         )
         cv2.rectangle(frame, (0, 0), (50, self.height_frame), (0, 0, 0), 2)
 
-        cv2.rectangle(
-            frame,
-            (50, 280),
-            (self.width_frame, int(self.height_frame)),
-            (238, 232, 248),
-            -1,
-        )
+        if value_msg <= 0:
+            cv2.rectangle(
+                frame,
+                (50, 280),
+                (self.width_frame, int(self.height_frame)),
+                (255, 204, 243),
+                -1,
+            )
+        else:
+            cv2.rectangle(
+                frame,
+                (50, 280),
+                (self.width_frame, int(self.height_frame)),
+                (162, 223, 0),
+                -1,
+            )
         cv2.rectangle(
             frame,
             (50, 280),
