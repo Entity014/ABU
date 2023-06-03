@@ -3,6 +3,7 @@ import cv2
 import math
 import numpy as np
 import datetime
+import configparser
 
 # import nanocamera as nano
 from rclpy.node import Node
@@ -10,6 +11,7 @@ from sensor_msgs.msg import Joy, Image
 from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Twist
 from rclpy import qos
+from pathlib import Path
 
 
 class Ps4(Node):
@@ -54,10 +56,10 @@ class Ps4(Node):
             "Dummy9",
             "L",
             "R",
-            "XBOX",
+            "PS",
             "LS",
             "RS",
-            "PS",
+            "XBOX",
         ]  # ? XBOX
         self.all2 = ["LX", "LY", "RX", "RY", "LT", "RT", "AX", "AY"]  # ? XBOX
         # self.all = [
@@ -73,8 +75,8 @@ class Ps4(Node):
         #     "R",
         #     "PS",
         #     "LS",
-        #     "RS"
-        # ] # ? PS4
+        #     "RS",
+        # ]  # ? PS4
         # self.all2 = ["LX", "LY", "LT", "RX", "RY", "RT", "AX", "AY"]  # ? PS4
         self.button = {element: 0 for element in self.all}
         self.axes = {element: 0 for element in self.all2}
@@ -91,13 +93,24 @@ class Ps4(Node):
         self.distance = 0.0
         self.state_auto = 0
 
-        self.assis_shoot = 0
+        self.assis_shoot = [0, 0, 0, 0, 0, 0]
         self.list_debount_r = []
         self.list_debount_l = []
 
-        self.param_pwm_motor0 = 163.0  # เสาฝั่งตรงข้าม
-        self.param_pwm_motor1 = 205.0  # เสากลาง
-        self.param_pwm_motor2 = 122.0  # เสาใกล้
+        home = str(Path.home())
+        file = "/config.ini"
+        self.file_path = home + file
+        self.config = configparser.ConfigParser()
+        self.config.read(self.file_path)
+        self.param_pwm_motor1 = float(self.config["DEFAULT"]["param1"])  # เสาใกล้
+        self.param_pwm_motor2 = float(self.config["DEFAULT"]["param2"])  # เสากลาง
+        self.param_pwm_motor3 = float(
+            self.config["DEFAULT"]["param3"]
+        )  # เสาฝั่งตรงข้าม
+
+        # self.param_pwm_motor0 = 163.0
+        # self.param_pwm_motor1 = 205.0
+        # self.param_pwm_motor2 = 122.0
 
         self.param_distance = 10
 
@@ -254,14 +267,9 @@ class Ps4(Node):
         msg.linear.y = float(round(rightFront * 255))
         msg.angular.x = float(round(leftBack * 255))
         msg.angular.y = float(round(rightBack * 255))
-
         # //------------------------------------------------------------------------------------------------//
-        if (self.button["L2"] == 1) and (self.button["R2"] == 1):
-            self.assis_shoot = 0
-        elif self.button["L2"] == 1:
-            self.assis_shoot += 0.5
-        elif self.button["R2"] == 1:
-            self.assis_shoot -= 0.5
+        if self.button["PS"] == 1:
+            self.write_configs(f"param{self.state+1}", str(self.pwm))
 
         # //------------------------------------------------------------------------------------------------//
         if (self.button["R"] == 1) and (self.counter == 0):
@@ -274,11 +282,11 @@ class Ps4(Node):
         if self.state < 0:
             self.state = 1
         if self.state == 0:
-            self.pwm = self.param_pwm_motor2 - self.assis_shoot
+            self.pwm = self.param_pwm_motor1 - self.assis_shoot[0]
         elif self.state == 1:
-            self.pwm = self.param_pwm_motor1 - self.assis_shoot
+            self.pwm = self.param_pwm_motor2 - self.assis_shoot[1]
         elif self.state == 2:
-            self.pwm = self.param_pwm_motor0 - self.assis_shoot
+            self.pwm = self.param_pwm_motor3 - self.assis_shoot[2]
 
         if self.pwm > 255:
             self.pwm = 255.0
@@ -300,7 +308,14 @@ class Ps4(Node):
         elif self.stateShoot == 2:
             self.stateShoot = 0
         # //------------------------------------------------------------------------------------------------//
+        if (self.button["L2"] == 1) and (self.button["R2"] == 1):
+            self.assis_shoot[self.state] = 0
+        elif self.button["L2"] == 1:
+            self.assis_shoot[self.state] += 0.5
+        elif self.button["R2"] == 1:
+            self.assis_shoot[self.state] -= 0.5
 
+        # //------------------------------------------------------------------------------------------------//
         if self.button["T"] == 1:
             msg.angular.z = 1.0
         elif self.button["L1"] == 1 and self.button["R1"] == 1:
@@ -359,8 +374,25 @@ class Ps4(Node):
         self.gui(tempMsg)
 
         # //------------------------------------------------------------------------------------------------//
-        self.get_logger().info(str(self.cheatState))
+        self.get_logger().info(str(self.state))
         self.sent_drive.publish(msg)
+
+    def read_configs(self):
+        self.config.read(self.file_path)
+        a = {}
+        for i in range(6):
+            a[f"param{i+1}"] = float(self.config["DEFAULT"][f"param{i+1}"])
+        return a
+
+    def write_configs(self, index, val):
+        self.config.read(self.file_path)
+        self.config.set("DEFAULT", index, val)
+        with open(self.file_path, "w") as config_file:
+            self.config.write(config_file)
+        self.param_pwm_motor1 = float(self.config["DEFAULT"]["param1"])
+        self.param_pwm_motor2 = float(self.config["DEFAULT"]["param2"])
+        self.param_pwm_motor3 = float(self.config["DEFAULT"]["param3"])
+        self.assis_shoot[int(str(index)[-1]) - 1] = 0
 
     def gui(self, msg_temp):
         block = [
@@ -437,9 +469,9 @@ class Ps4(Node):
 
     def draw_mode(self, frame, block, mode):
         text_block = [
-            f"Near {self.param_pwm_motor0}",
-            f"Mediam {self.param_pwm_motor1}",
-            f"Enemy {self.param_pwm_motor2}",
+            f"Near {self.param_pwm_motor1}",
+            f"Mediam {self.param_pwm_motor2}",
+            f"Enemy {self.param_pwm_motor3}",
         ]
         # current_time = datetime.datetime.now().strftime("%H:%M:%S")
         current_time = datetime.datetime.now()
