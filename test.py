@@ -1,22 +1,39 @@
 import cv2
+import base64
+from flask import Flask, render_template, Response
 
-# Initialize the webcam
-cap = cv2.VideoCapture(0)
+app = Flask(__name__)
 
-while True:
-    # Read the frame from the webcam
-    ret, frame = cap.read()
 
-    # Rotate the frame by 90 degrees clockwise
-    rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+def capture_frames():
+    cap = cv2.VideoCapture(0)
 
-    # Display the rotated frame
-    cv2.imshow("Rotated Frame", rotated_frame)
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-    # Break the loop if the 'q' key is pressed
-    if cv2.waitKey(1) == ord("q"):
-        break
+        # Convert frame to base64
+        _, buffer = cv2.imencode(".jpg", frame)
+        image_base64 = base64.b64encode(buffer).decode("utf-8")
 
-# Release the webcam and close the window
-cap.release()
-cv2.destroyAllWindows()
+        # Yield the frame for the response
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n"
+            + image_base64.encode("utf-8")
+            + b"\r\n\r\n"
+        )
+
+    cap.release()
+
+
+@app.route("/")
+def index():
+    return Response(
+        capture_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
+    )
+
+
+if __name__ == "__main__":
+    app.run()

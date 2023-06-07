@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenCV Image on Website</title>
+</head>
+<body>
+    <img id="image" alt="OpenCV Image">
+    <script>
+        var img = document.getElementById('image');
+
+        // Function to update the image source with base64 data
+        function updateImage(data) {
+            img.src = "data:image/jpeg;base64," + data;
+        }
+
+        // Function to continuously update the image
+        function update() {
+            fetch('/stream') // Endpoint to retrieve image data
+                .then(response => response.text())
+                .then(data => updateImage(data))
+                .catch(error => console.error(error));
+
+            requestAnimationFrame(update);
+        }
+
+        // Start updating the image
+        update();
+    </script>
+</body>
+</html>
