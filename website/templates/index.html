@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Video Stream</title>
-  </head>
-  <body>
-    <h1>Video Stream</h1>
-    <img src="{{ url_for('video_feed') }}" />
-  </body>
+<head>
+    <title>Pixelated Webcam</title>
+    <style>
+        #video-container {
+            margin: auto;
+            width: 640px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <img id="video-stream" src="{{ url_for('video_feed') }}">
+    </div>
+</body>
 </html>
