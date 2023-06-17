@@ -293,7 +293,7 @@ void up_down_fun(float msg)
     preUp_Down = msg;
     onceUp_Down = true;
   }
-  if ((msg == 10) || (msg == 30)) // up
+  if (((msg == 10) || (msg == 30)) && (pick_state != "down")) // up
   {
     digitalWrite(pick_up_down_ina, HIGH);
     digitalWrite(pick_up_down_inb, LOW);
@@ -325,16 +325,16 @@ void up_down_fun(float msg)
   }
 }
 
-void spring(float msg)
+void spring(float msg1, float msg2)
 {
-  if (preSpring != msg)
+  if (preSpring != msg1)
   {
-    preSpring = msg;
+    preSpring = msg1;
     onceSpring = true;
     onceSpringAuto = true;
     onceSpringAutoStop = true;
   }
-  if ((msg == 999) || (msg == 30))
+  if (((msg1 == 999) || (msg1 == 30)) && (msg2 > 0))
   {
     digitalWrite(shoot_spring_ina, HIGH);
     digitalWrite(shoot_spring_inb, LOW);
@@ -417,7 +417,7 @@ void subscription_callback(const void *msgin)
   shoot_fun(msg_sub->linear.z);
   pick_fun(msg_sub->angular.z);
   up_down_fun(msg_sub->angular.z);
-  spring(msg_sub->angular.z);
+  spring(msg_sub->angular.z, msg_sub->linear.z);
 }
 
 // Functions create_entities and destroy_entities can take several seconds.
